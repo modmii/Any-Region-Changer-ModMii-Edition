@@ -79,7 +79,7 @@ void zero_sig(signed_blob *sig) {
 void brute_tmd(tmd *p_tmd) {
   u16 fill;
   for(fill=0; fill<65535; fill++) {
-    p_tmd->fill3=fill;
+    p_tmd->fill2=fill;
     sha1 hash;
     //    debug_printf("SHA1(%p, %x, %p)\n", p_tmd, TMD_SIZE(p_tmd), hash);
     SHA1((u8 *)p_tmd, TMD_SIZE(p_tmd), hash);;

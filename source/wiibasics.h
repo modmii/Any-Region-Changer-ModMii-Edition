@@ -57,8 +57,6 @@ distribution.
 #define ARCME_VERSION 1.0
 #define ARCME_REV     6
 
-int Current_Ios;
-
 // be functions from segher's wii.git
 u16 be16(const u8 *p);
 u32 be32(const u8 *p);

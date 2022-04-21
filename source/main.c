@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
 	char sysmenu_region;
 	bool needbreak = false;
 	u32 buttons;
-	Current_Ios = 0;
+	int Current_Ios = 0;
 	
 	ret = IOS_ReloadIOS(236);
 	if(ret != 0) {

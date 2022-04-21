@@ -174,7 +174,7 @@ void PrintBanner() {
     ClearScreen();
     Console_SetColors(GREEN, 0, WHITE, 2);
     char text[ConsoleCols];
-    snprintf(text, sizeof(text), "Any Region Changer   ModMii Edition   %.1lf.%i            IOS: %i", ARCME_VERSION, ARCME_REV, Current_Ios);
+    snprintf(text, sizeof(text), "Any Region Changer   ModMii Edition   %.1lf.%i            IOS: %i", ARCME_VERSION, ARCME_REV, IOS_GetVersion());
     PrintCenter(text, ConsoleCols);
     Console_SetColors(BLACK, 0, WHITE, 2);
 }
