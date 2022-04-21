@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
 		for (i = i; i < 8; i++)
 			printf(page_contents[i]);
 		printf("------------------------------------------------------------------------");
-		printf("Auto Fix\n");
+		printf("Auto Fix - SysMenu Region: %c (v%u)\n", sysmenu_region, sysmenu_version);
 		printf("------------------------------------------------------------------------");
 		for (i = i; i < 9; i++)
 			printf(page_contents[i]);
