@@ -30,103 +30,101 @@
 /**
  *Returns true when HW_AHBPROT access can be applied
  */
-#define AHBPROT_DISABLED (*(vu32*)0xcd800064 == 0xFFFFFFFF)
+#define AHBPROT_DISABLED (*(vu32 *)0xcd800064 == 0xFFFFFFFF)
 
 //==============================================================================
 // Error code definitions:
 //==============================================================================
-#define ERROR_AHBPROT       -5
-#define ERROR_PATCH         -7
+#define ERROR_AHBPROT -5
+#define ERROR_PATCH -7
 
 //==============================================================================
 // C++ header
 //==============================================================================
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-/* __cplusplus */
+    /* __cplusplus */
 
-//==============================================================================
-// Patchsets:
-//==============================================================================
-/*
-Wii:
-    * DI Readlimit
-    * ISFS Permissions
-    * ES SetUID
-    * ES SetIdentify
-    * Hash Check (aka Trucha)
-    * New Hash Check (aka New Trucha)
-    * SSL patches
+    //==============================================================================
+    // Patchsets:
+    //==============================================================================
+    /*
+    Wii:
+        * DI Readlimit
+        * ISFS Permissions
+        * ES SetUID
+        * ES SetIdentify
+        * Hash Check (aka Trucha)
+        * New Hash Check (aka New Trucha)
+        * SSL patches
 
-Sciifii:
-    * MEM2 Prot
-    * ES OpenTitleContent 1 & 2
-    * ES ReadContent Prot
-    * ES CloseContent
-    * ES TitleVersionCheck
-    * ES TitleDeleteCheck
+    Sciifii:
+        * MEM2 Prot
+        * ES OpenTitleContent 1 & 2
+        * ES ReadContent Prot
+        * ES CloseContent
+        * ES TitleVersionCheck
+        * ES TitleDeleteCheck
 
-vWii:
-   * Kill Anti-SystemTitle-Install 1, 2, 3, 4 & 5
-*/
+    vWii:
+       * Kill Anti-SystemTitle-Install 1, 2, 3, 4 & 5
+    */
 
+    //==============================================================================
+    // Functions:
+    //==============================================================================
 
-//==============================================================================
-// Functions:
-//==============================================================================
+    /**
+     * This function can be used to keep HW_AHBPROT access when going to reload IOS
+     * @param verbose Flag determing whether or not to print messages on-screen
+     * @example
+     *      if(AHBPROT_DISABLED) {
+     *          s32 ret;
+     *          ret = IosPatch_AHBPROT(false);
+     *          if (ret) {
+     *              IOS_ReloadIOS(36);
+     *          } else {
+     *              printf("IosPatch_AHBPROT failed.");
+     *          }
+     *      }
+     * @return Signed 32bit integer representing code
+     *      > 0             : Success   - return equals to number of applied patches
+     *      ERROR_AHBPROT   : Error     - No HW_AHBPROT access
+     */
+    s32 IosPatch_AHBPROT(bool verbose);
 
-/**
- * This function can be used to keep HW_AHBPROT access when going to reload IOS
- * @param verbose Flag determing whether or not to print messages on-screen
- * @example 
- *      if(AHBPROT_DISABLED) {
- *          s32 ret;
- *          ret = IosPatch_AHBPROT(false);
- *          if (ret) {
- *              IOS_ReloadIOS(36);
- *          } else {
- *              printf("IosPatch_AHBPROT failed.");
- *          }
- *      }
- * @return Signed 32bit integer representing code
- *      > 0             : Success   - return equals to number of applied patches
- *      ERROR_AHBPROT   : Error     - No HW_AHBPROT access
- */
-s32 IosPatch_AHBPROT(bool verbose);
+    /**
+     * This function applies patches on current IOS
+     * @see Patchsets
+     * @param wii Flag determing whether or not to apply Wii patches.
+     * @param sciifii Flag determing whether or not to apply extra Sciifii patches.
+     * @param vwii Flag determing whether or not to apply extra vWii patches.
+     * @param verbose Flag determing whether or not to print messages on-screen.
+     * @example if(AHBPROT_DISABLED) IosPatch_FULL(true, false, false, false);
+     * @return Signed 32bit integer representing code
+     *      > 0             : Success   - return equals to number of applied patches
+     *      ERROR_AHBPROT   : Error     - No HW_AHBPROT access
+     *      ERROR_PATCH     : Error     - Patching HW_AHBPROT access failed
+     */
+    s32 IosPatch_RUNTIME(bool wii, bool sciifii, bool vwii, bool verbose);
 
-
-/**
- * This function applies patches on current IOS
- * @see Patchsets
- * @param wii Flag determing whether or not to apply Wii patches.
- * @param sciifii Flag determing whether or not to apply extra Sciifii patches.
- * @param vwii Flag determing whether or not to apply extra vWii patches.
- * @param verbose Flag determing whether or not to print messages on-screen.
- * @example if(AHBPROT_DISABLED) IosPatch_FULL(true, false, false, false);
- * @return Signed 32bit integer representing code
- *      > 0             : Success   - return equals to number of applied patches
- *      ERROR_AHBPROT   : Error     - No HW_AHBPROT access
- *      ERROR_PATCH     : Error     - Patching HW_AHBPROT access failed
- */
-s32 IosPatch_RUNTIME(bool wii, bool sciifii, bool vwii, bool verbose);
-
-
-/**
- * This function combines IosPatch_AHBPROT + IOS_ReloadIOS + IosPatch_RUNTIME
- * @see Patchsets
- * @param wii Flag determing whether or not to apply Wii patches.
- * @param sciifii Flag determing whether or not to apply extra Sciifii patches.
- * @param vwii Flag determing whether or not to apply extra vWii patches.
- * @param verbose Flag determing whether or not to print messages on-screen.
- * @param IOS Which IOS to reload into.
- * @example if(AHBPROT_DISABLED) IosPatch_FULL(true, false, false, false, 58);
- * @return Signed 32bit integer representing code
- *      > 0             : Success   - return equals to number of applied patches
- *      ERROR_AHBPROT   : Error     - No HW_AHBPROT access
- *      ERROR_PATCH     : Error     - Patching HW_AHBPROT access failed
- */
-s32 IosPatch_FULL(bool wii, bool sciifii, bool vwii, bool verbose, int IOS);
+    /**
+     * This function combines IosPatch_AHBPROT + IOS_ReloadIOS + IosPatch_RUNTIME
+     * @see Patchsets
+     * @param wii Flag determing whether or not to apply Wii patches.
+     * @param sciifii Flag determing whether or not to apply extra Sciifii patches.
+     * @param vwii Flag determing whether or not to apply extra vWii patches.
+     * @param verbose Flag determing whether or not to print messages on-screen.
+     * @param IOS Which IOS to reload into.
+     * @example if(AHBPROT_DISABLED) IosPatch_FULL(true, false, false, false, 58);
+     * @return Signed 32bit integer representing code
+     *      > 0             : Success   - return equals to number of applied patches
+     *      ERROR_AHBPROT   : Error     - No HW_AHBPROT access
+     *      ERROR_PATCH     : Error     - Patching HW_AHBPROT access failed
+     */
+    s32 IosPatch_FULL(bool wii, bool sciifii, bool vwii, bool verbose, int IOS);
 
 //==============================================================================
 // C++ footer
