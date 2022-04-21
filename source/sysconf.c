@@ -762,6 +762,7 @@ s32 SYSCONF_GetRegion(void)
 	if(!strcmp(buf, "US")) return SYSCONF_REGION_US;
 	if(!strcmp(buf, "EU")) return SYSCONF_REGION_EU;
 	if(!strcmp(buf, "KR")) return SYSCONF_REGION_KR;
+	if(!strcmp(buf, "CN")) return SYSCONF_REGION_CN;
 	return SYSCONF_EBADVALUE;
 }
 
@@ -966,6 +967,8 @@ s32 SYSCONF_SetRegion(s32 value)
 			return __SYSCONF_SetTxt("GAME", "EU");
 		case SYSCONF_REGION_KR:
 			return __SYSCONF_SetTxt("GAME", "KR");
+		case SYSCONF_REGION_CN:
+			return __SYSCONF_SetTxt("GAME", "CN");
 		default:
 			return SYSCONF_EBADVALUE;
 	}
