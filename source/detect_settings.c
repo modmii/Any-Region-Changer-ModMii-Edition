@@ -277,6 +277,7 @@ char get_sysmenu_region(void)
 	case 'U':
 	case 'E':
 	case 'J':
+	case 'K':
 		return region;
 	break;
 	default:
