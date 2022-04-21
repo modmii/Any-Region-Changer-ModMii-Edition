@@ -55,7 +55,7 @@ distribution.
 #define RIGHT_ARROW "\x10"
 
 #define ARCME_VERSION 1.0
-#define ARCME_REV     5
+#define ARCME_REV     6
 
 int Current_Ios;
 

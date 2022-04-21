@@ -72,6 +72,7 @@ void draw_credits() {
 	printf("\n\tARC ModMii Edition: \n");
 	printf("\t- Scooby74029(FakeCoder) - Coding \n");
 	printf("\t- Xflak - testing, overall help \n");
+	printf("\t- TheShadowEevee - KR region support \n");
 	printf("\t- To Many Coders To Thank For The Great Code I Used ..... \n");
 	printf("\n");
 	Console_SetPosition(26,0);
@@ -371,8 +372,13 @@ int main(int argc, char **argv) {
 						video = 1;
 						country = 110;
 					}
-					// ============== to do add korean system menu's region ============================
-					// =======================================        ==================================
+					else if(sysmenu_region == 255) { // KOR
+						lang = 1;
+						area = 7;
+						game = 3;
+						video = 0;
+						country = 136;
+					}
 					saveSettings();
 				break;
 				case 9:
