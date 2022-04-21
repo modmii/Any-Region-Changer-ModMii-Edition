@@ -113,7 +113,7 @@ void hexdump2(void *d, int len)
 	}
 }
 
-static ssize_t __out_write(struct _reent *r, int fd, const char *ptr, size_t len)
+static ssize_t __out_write(struct _reent *r, void *fd, const char *ptr, size_t len)
 {
 	if (geckoinit && ptr)
 	{
