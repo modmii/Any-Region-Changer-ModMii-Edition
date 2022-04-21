@@ -306,11 +306,11 @@ void hex_print_array16(const u8 *array, u32 size)
 	char line[17];
 	line[16] = 0;
 	if (size > page_size)
-		printf("Page 1 of %lu", (size / page_size) + 1);
+		printf("Page 1 of %u", (size / page_size) + 1);
 	while (offset < size)
 	{
 		if (!(offset % 16))
-			printf("\n0x%08lX: ", offset);
+			printf("\n0x%08X: ", offset);
 
 		printf("%02X", array[offset]);
 
@@ -362,7 +362,7 @@ s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 
 	ret = ISFS_Open(filepath, ISFS_OPEN_READ);
 	if (ret <= 0)
 	{
-		printf("Error! ISFS_Open (ret = %ld)\n", ret);
+		printf("Error! ISFS_Open (ret = %d)\n", ret);
 		return -1;
 	}
 
@@ -371,7 +371,7 @@ s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 
 	ret = ISFS_GetFileStats(fd, &filestats);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_GetFileStats (ret = %ld)\n", ret);
+		printf("Error! ISFS_GetFileStats (ret = %d)\n", ret);
 		return -1;
 	}
 
@@ -379,7 +379,7 @@ s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 
 
 	if (*file_size > max_size)
 	{
-		printf("File is too large! Size: %lu Max: %lu", *file_size, max_size);
+		printf("File is too large! Size: %u Max: %u", *file_size, max_size);
 		return -1;
 	}
 
@@ -387,19 +387,19 @@ s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 
 	*file_size = ret;
 	if (ret < 0)
 	{
-		printf("Error! ISFS_Read (ret = %ld)\n", ret);
+		printf("Error! ISFS_Read (ret = %d)\n", ret);
 		return -1;
 	}
 	else if (ret != filestats.file_length)
 	{
-		printf("Error! ISFS_Read Only read: %ld\n", ret);
+		printf("Error! ISFS_Read Only read: %d\n", ret);
 		return -1;
 	}
 
 	ret = ISFS_Close(fd);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_Close (ret = %ld)\n", ret);
+		printf("Error! ISFS_Close (ret = %d)\n", ret);
 		return -1;
 	}
 	return 0;
@@ -425,7 +425,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 		ret = ISFS_SetAttr(filepath, ownerID, groupID, attr, 3, 3, 3);
 		if (ret < 0)
 		{
-			printf("Error! ISFS_SetAttr (ret = %ld)\n", ret);
+			printf("Error! ISFS_SetAttr (ret = %d)\n", ret);
 			out = -1;
 			goto cleanup;
 		}
@@ -439,7 +439,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 		ret = ISFS_CreateFile(filepath, attr, 3, 3, 3);
 		if (ret < 0)
 		{
-			printf("Error! ISFS_CreateFile (ret = %ld)\n", ret);
+			printf("Error! ISFS_CreateFile (ret = %d)\n", ret);
 			out = -1;
 			goto cleanup;
 		}
@@ -448,7 +448,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 	}
 	else if (ret <= 0)
 	{
-		printf("Error! ISFS_Open WRITE (ret = %ld)\n", ret);
+		printf("Error! ISFS_Open WRITE (ret = %d)\n", ret);
 		out = -1;
 		goto cleanup;
 	}
@@ -458,7 +458,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 	ret = ISFS_Seek(fd, 0, 0);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_Seek (ret = %ld)\n", ret);
+		printf("Error! ISFS_Seek (ret = %d)\n", ret);
 		out = -1;
 		goto cleanup;
 	}
@@ -466,21 +466,21 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 	ret = ISFS_Write(fd, filearray, array_size);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_Write (ret = %ld)\n", ret);
+		printf("Error! ISFS_Write (ret = %d)\n", ret);
 		out = -1;
 		goto cleanup;
 	}
 
 	if (ret != array_size)
 	{
-		printf("Filesize is wrong! Wrote:%lu Expect:%lu", filestats.file_length, array_size);
+		printf("Filesize is wrong! Wrote:%u Expect:%u", filestats.file_length, array_size);
 		out = -1;
 	}
 
 	ret = ISFS_Close(fd);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_Close (ret = %ld)\n", ret);
+		printf("Error! ISFS_Close (ret = %d)\n", ret);
 		return -1;
 	}
 	fd = 0;
@@ -513,7 +513,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 	ret = ISFS_GetAttr(filepath, &realownid, &realgroupid, &realattr, &realownperm, &realgroupperm, &realotherperm);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_GetAttr (ret = %ld)\n", ret);
+		printf("Error! ISFS_GetAttr (ret = %d)\n", ret);
 		out = -1;
 	}
 
@@ -522,7 +522,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 		ret = ES_GetTitleID(&currentTid);
 		if (ret)
 		{
-			printf("Fail GetTitleID %ld", ret);
+			printf("Fail GetTitleID %d", ret);
 			if (wait_key(WPAD_BUTTON_A | WPAD_BUTTON_B) & WPAD_BUTTON_B)
 				goto cleanup;
 		}
@@ -539,7 +539,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 	ret = ISFS_SetAttr(filepath, ownerID, groupID, attr, own_perm, group_perm, other_perm);
 	if (ret < 0)
 	{
-		printf("Error! ISFS_SetAttr (ret = %ld)\n", ret);
+		printf("Error! ISFS_SetAttr (ret = %d)\n", ret);
 		out = -1;
 		goto cleanup;
 	}
@@ -549,7 +549,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 		ret = ES_SetUID(currentTid);
 		if (ret)
 		{
-			printf("Fail SetUID %ld", ret);
+			printf("Fail SetUID %d", ret);
 			if (wait_key(WPAD_BUTTON_A | WPAD_BUTTON_B) & WPAD_BUTTON_B)
 				goto cleanup;
 		}
@@ -561,7 +561,7 @@ cleanup:
 		ret = ISFS_Close(fd);
 		if (ret < 0)
 		{
-			printf("Error! ISFS_Close (ret = %ld)\n", ret);
+			printf("Error! ISFS_Close (ret = %d)\n", ret);
 			return -1;
 		}
 	}

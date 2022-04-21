@@ -54,12 +54,12 @@ u16 get_installed_title_version(u64 title)
 
 			// printf("Error! ES_GetStoredTMDSize: %d\n", ret);
 
-			sprintf(filepath, "/title/%08lx/%08lx/content/title.tmd", TITLE_UPPER(title), TITLE_LOWER(title));
+			sprintf(filepath, "/title/%08x/%08x/content/title.tmd", TITLE_UPPER(title), TITLE_LOWER(title));
 
 			ret = ISFS_Open(filepath, ISFS_OPEN_READ);
 			if (ret <= 0)
 			{
-				printf("Error! ISFS_Open (ret = %ld)\n", ret);
+				printf("Error! ISFS_Open (ret = %d)\n", ret);
 				return 0;
 			}
 
@@ -68,21 +68,21 @@ u16 get_installed_title_version(u64 title)
 			ret = ISFS_Seek(fd, 0x1dc, 0);
 			if (ret < 0)
 			{
-				printf("Error! ISFS_Seek (ret = %ld)\n", ret);
+				printf("Error! ISFS_Seek (ret = %d)\n", ret);
 				return 0;
 			}
 
 			ret = ISFS_Read(fd, tmd_buf, 2);
 			if (ret < 0)
 			{
-				printf("Error! ISFS_Read (ret = %ld)\n", ret);
+				printf("Error! ISFS_Read (ret = %d)\n", ret);
 				return 0;
 			}
 
 			ret = ISFS_Close(fd);
 			if (ret < 0)
 			{
-				printf("Error! ISFS_Close (ret = %ld)\n", ret);
+				printf("Error! ISFS_Close (ret = %d)\n", ret);
 				return 0;
 			}
 
@@ -97,7 +97,7 @@ u16 get_installed_title_version(u64 title)
 			ret = ES_GetStoredTMD(title, s_tmd, tmd_size);
 			if (ret < 0)
 			{
-				printf("Error! ES_GetStoredTMD: %ld\n", ret);
+				printf("Error! ES_GetStoredTMD: %d\n", ret);
 				return -1;
 			}
 			tmd *t = SIGNATURE_PAYLOAD(s_tmd);
@@ -127,12 +127,12 @@ u64 get_title_ios(u64 title)
 
 			// printf("Error! ES_GetStoredTMDSize: %d\n", ret);
 
-			sprintf(filepath, "/title/%08lx/%08lx/content/title.tmd", TITLE_UPPER(title), TITLE_LOWER(title));
+			sprintf(filepath, "/title/%08x/%08x/content/title.tmd", TITLE_UPPER(title), TITLE_LOWER(title));
 
 			ret = ISFS_Open(filepath, ISFS_OPEN_READ);
 			if (ret <= 0)
 			{
-				printf("Error! ISFS_Open (ret = %ld)\n", ret);
+				printf("Error! ISFS_Open (ret = %d)\n", ret);
 				return 0;
 			}
 
@@ -141,21 +141,21 @@ u64 get_title_ios(u64 title)
 			ret = ISFS_Seek(fd, 0x184, 0);
 			if (ret < 0)
 			{
-				printf("Error! ISFS_Seek (ret = %ld)\n", ret);
+				printf("Error! ISFS_Seek (ret = %d)\n", ret);
 				return 0;
 			}
 
 			ret = ISFS_Read(fd, tmd_buf, 8);
 			if (ret < 0)
 			{
-				printf("Error! ISFS_Read (ret = %ld)\n", ret);
+				printf("Error! ISFS_Read (ret = %d)\n", ret);
 				return 0;
 			}
 
 			ret = ISFS_Close(fd);
 			if (ret < 0)
 			{
-				printf("Error! ISFS_Close (ret = %ld)\n", ret);
+				printf("Error! ISFS_Close (ret = %d)\n", ret);
 				return 0;
 			}
 
@@ -170,7 +170,7 @@ u64 get_title_ios(u64 title)
 			ret = ES_GetStoredTMD(title, s_tmd, tmd_size);
 			if (ret < 0)
 			{
-				printf("Error! ES_GetStoredTMD: %ld\n", ret);
+				printf("Error! ES_GetStoredTMD: %d\n", ret);
 				return -1;
 			}
 			tmd *t = SIGNATURE_PAYLOAD(s_tmd);
@@ -220,7 +220,7 @@ char get_sysmenu_region(void)
 	ret = ES_GetNumTicketViews(tid, &views);
 	if (ret < 0)
 	{
-		printf(" Error! ES_GetNumTickets (ret = %ld)\n", ret);
+		printf(" Error! ES_GetNumTickets (ret = %d)\n", ret);
 		wait_anyKey();
 		return ret;
 	}
@@ -233,7 +233,7 @@ char get_sysmenu_region(void)
 	}
 	else if (views > 16)
 	{
-		printf(" Too many ticket views! (views = %ld)\n", views);
+		printf(" Too many ticket views! (views = %d)\n", views);
 		wait_anyKey();
 		return 0;
 	}
@@ -241,7 +241,7 @@ char get_sysmenu_region(void)
 	ret = ES_GetTicketViews(tid, viewdata, 1);
 	if (ret < 0)
 	{
-		printf("Error! ES_OpenTitleContent (ret = %ld)\n", ret);
+		printf("Error! ES_OpenTitleContent (ret = %d)\n", ret);
 		wait_anyKey();
 		return 0;
 	}
@@ -249,7 +249,7 @@ char get_sysmenu_region(void)
 	ret = ES_OpenTitleContent(tid, viewdata, 1);
 	if (ret < 0)
 	{
-		printf("Error! ES_OpenTitleContent (ret = %ld)\n", ret);
+		printf("Error! ES_OpenTitleContent (ret = %d)\n", ret);
 		wait_anyKey();
 		return 0;
 	}
@@ -262,7 +262,7 @@ char get_sysmenu_region(void)
 		ret = ES_ReadContent(cfd, fbuffer, 0x500);
 		if (ret < 0)
 		{
-			printf("Error! ES_ReadContent (ret = %ld)\n", ret);
+			printf("Error! ES_ReadContent (ret = %d)\n", ret);
 			wait_anyKey();
 			return 0;
 		}
@@ -282,7 +282,7 @@ char get_sysmenu_region(void)
 	ret = ES_CloseContent(cfd);
 	if (ret < 0)
 	{
-		printf("Error! ES_CloseContent (ret = %ld)\n", ret);
+		printf("Error! ES_CloseContent (ret = %d)\n", ret);
 		wait_anyKey();
 		return 0;
 	}

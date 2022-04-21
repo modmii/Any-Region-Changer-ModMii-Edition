@@ -171,19 +171,19 @@ s32 Identify(const u8 *certs, u32 certs_size, const u8 *idtmd, u32 idtmd_size, c
 		switch (ret)
 		{
 		case ES_EINVAL:
-			printf("Error! ES_Identify (ret = %ld;) Data invalid!\n", ret);
+			printf("Error! ES_Identify (ret = %d;) Data invalid!\n", ret);
 			break;
 		case ES_EALIGN:
-			printf("Error! ES_Identify (ret = %ld;) Data not aligned!\n", ret);
+			printf("Error! ES_Identify (ret = %d;) Data not aligned!\n", ret);
 			break;
 		case ES_ENOTINIT:
-			printf("Error! ES_Identify (ret = %ld;) ES not initialized!\n", ret);
+			printf("Error! ES_Identify (ret = %d;) ES not initialized!\n", ret);
 			break;
 		case ES_ENOMEM:
-			printf("Error! ES_Identify (ret = %ld;) No memory!\n", ret);
+			printf("Error! ES_Identify (ret = %d;) No memory!\n", ret);
 			break;
 		default:
-			printf("Error! ES_Identify (ret = %ld)\n", ret);
+			printf("Error! ES_Identify (ret = %d)\n", ret);
 			break;
 		}
 #ifdef DEBUG_IDENT
