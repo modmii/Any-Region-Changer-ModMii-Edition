@@ -227,7 +227,6 @@ char AREAtoSysMenuRegion(int area)
 		return 'J';
 	case 1:
 	case 4:
-	case 7:
 	case 8:
 	case 9:
 	case 10:
@@ -236,6 +235,8 @@ char AREAtoSysMenuRegion(int area)
 	case 2:
 	case 3:
 		return 'E';
+	case 7:
+		return 'K';
 	default:
 		return 0;
 	}
