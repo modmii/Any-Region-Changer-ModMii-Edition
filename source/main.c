@@ -212,7 +212,6 @@ void updatePage(void)
 	sprintf(page_contents[7], "    %-40s   %10s  \n", "Save Settings", "Save    ");
 	sprintf(page_contents[8], "    %-40s   %10s  \n", "Auto Fix Settings ", "Fix   ");
 	sprintf(page_contents[9], "    %-40s   %10s  \n", "Exit to the Homebrew Channel", "Exit    ");
-	sprintf(page_contents[10], "    %-40s   %10s  \n", "Reboot to System Menu", "Reboot  ");
 
 	updateSelected(0);
 }
