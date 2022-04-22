@@ -1,17 +1,18 @@
 # Any Region Changer: Modmii Edition
 
-Any Region Changer: ModMii Edition (Otherwise known as ARCME) allows you to edit any and all of the region information on your Wii.
+Any Region Changer: ModMii Edition (Otherwise known as ARCME) allows you to edit any and all of the region information on your Wii.  
 The setting changes are non-temporary, i.e. they persist after system reboot.
 
 You should have the Homebrew Channel installed so you can revert any changes pre or post reboot if needed.
 
 ## Compiling
-You need to install [devKitPro](https://devkitpro.org/wiki/Getting_Started) and [RuntimeIOSPatch](https://gbatemp.net/threads/wii-vwii-libruntimeiospatch.339606/?msclkid=9449fb2ac11111eca5087aab4842d005).
+You need to install [devKitPro](https://devkitpro.org/wiki/Getting_Started) with the `wii-dev` group installed, as well as [RuntimeIOSPatch](https://gbatemp.net/threads/wii-vwii-libruntimeiospatch.339606/?msclkid=9449fb2ac11111eca5087aab4842d005) properly setup.  
 If you are using Windows, it is recommended to use [WSL2](https://docs.microsoft.com/en-us/windows/wsl/about) if avalible.
 Once all required tools are installed, run `make` in the same folder as  `Makefile`.
 
 ## Disclaimer
-This software comes with NO WARRANTY WHATSOEVER. You may use this software at your own risk. Neither ModMii nor any source code contributors can take responsibility for any damage caused by this application.
+This software comes with NO WARRANTY WHATSOEVER. You may use this software at your own risk.  
+Neither ModMii nor any source code contributors can take responsibility for any damage caused by this application.  
   
 ## Warnings
  - If setting.txt is corrupted for any reason, it is entirely possible that your Wii will no longer boot. 
