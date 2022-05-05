@@ -81,6 +81,7 @@ void draw_credits()
 	Console_SetPosition(26, 20);
 	printf("Press Any Button To Return ..... ");
 }
+
 void Draw_Disclaimer()
 {
 	ClearScreen();
@@ -102,6 +103,7 @@ void Draw_Disclaimer()
 	printf("\n\n\n\n\t\t\t\t[A] Continue             [Home] Exit\n");
 	wait_key(WPAD_BUTTON_A);
 }
+
 void handleError(const char *string, int errorval)
 {
 	printf("Unexpected Error: %s Value: %d\n", string, errorval);
@@ -434,13 +436,20 @@ int main(int argc, char **argv)
 					video = 1;
 					country = 110;
 				}
-				else if (sysmenu_region == 255)
+				else if (sysmenu_region == 75)
 				{ // KOR
 					lang = 1;
 					area = 7;
 					game = 3;
 					video = 0;
 					country = 136;
+				}
+				else
+				{
+					printf("\nUnknown System Menu region \"%u\".\n", sysmenu_region);
+					printf("Press any key to quit\n");
+					wait_anyKey();
+					exit(0);
 				}
 				saveSettings();
 				break;
