@@ -47,7 +47,7 @@ distribution.
 #define WARNING_SIGN "\x1b[30;1m\x1b[43;1m/!\\\x1b[37;1m\x1b[40m"
 #define maxdata 256
 
-u32 selected = 0;
+u32 selected = 8;
 char page_contents[ITEMS][64];
 
 int lang, area, game, video, region, country, countrystr, eula;
