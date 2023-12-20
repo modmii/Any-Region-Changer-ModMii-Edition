@@ -38,7 +38,6 @@ distribution.
 #include "wiibasics.h"
 #include "runtimeiospatch.h"
 #include "sysconf.h"
-#include "id.h"
 #include "detect_settings.h"
 #include "gecko.h"
 
@@ -47,17 +46,19 @@ distribution.
 #define WARNING_SIGN "\x1b[30;1m\x1b[43;1m/!\\\x1b[37;1m\x1b[40m"
 #define maxdata 256
 
-u32 selected = 8;
+// Why was this unsigned? Lol
+int selected = 8;
 char page_contents[ITEMS][64];
 
 int lang, area, game, video, region, country, countrystr, eula;
 u8 sadr[SADR_LENGTH];
 
-char languages[][ITEMS] = {"Japanese ", "English  ", "German   ", "French   ", "Spanish  ", "Italian  ", "Dutch    "};
-char areas[][ITEMS] = {"Japan   ", "USA     ", "Europe  ", "Australia", "Brazil  ", "Taiwan  ", "China   ", "Korea   ", "Hong Kong", "Asia    ", "Latin Am.", "S. Africa"};
-char regions[][ITEMS] = {"Japan   ", "USA     ", "Europe  ", "Korea   "};
-char vmodes[][ITEMS] = {"NTSC    ", "PAL     ", "MPAL    "};
-char eulas[][ITEMS] = {"Unread  ", "Read    "};
+static const char
+	*languages[] = {"Japanese", "English", "German", "French", "Spanish", "Italian", "Dutch"}, // 9
+	*areas[] = {"Japan", "USA", "Europe", "Australia", "Brazil", "Taiwan", "China", "Korea", "Hong Kong", "Asia", "Latin Am.", "S. Africa"}, // ?
+	*regions[] = {"Japan", "USA", "Europe", "Korea"}, // 8
+	*vmodes[] = {"NTSC", "PAL", "MPAL"}, // 8
+	*eulas[] = {"Unread", "Read"}; // 8
 
 void draw_credits()
 {
@@ -122,16 +123,23 @@ void getSettings(void)
 	eula = SYSCONF_GetEULA();
 	if (lang < 0 || area < 0 || game < 0 || video < 0 || (eula != SYSCONF_ENOENT && eula < 0))
 	{
-		printf("Error getting settings! %d, %d, %d, %d, %d\n", lang, area, game, video, eula);
+		printf("Error getting settings!\n"
+			"lang=%d\t"
+			"area=%d\t"
+			"game=%d\n"
+			"video=%d\t"
+			"eula=%d\t\n" , lang, area, game, video, eula);
 		wait_anyKey();
 		exit(1);
 	}
 
 	if (SYSCONF_GetLength("IPL.SADR") != SADR_LENGTH)
 		handleError("IPL.SADR Length Incorrect", SYSCONF_GetLength("IPL.SADR"));
+
 	ret = SYSCONF_Get("IPL.SADR", sadr, SADR_LENGTH);
 	if (ret < 0)
 		handleError("SYSCONF_Get IPL.SADR", ret);
+
 	country = sadr[0];
 	gprintf("\n\ncountry[%i] \n\n", country);
 }
@@ -144,18 +152,22 @@ void saveSettings(void)
 		ret = SYSCONF_SetLanguage(lang);
 	if (ret)
 		handleError("SYSCONF_SetLanguage", ret);
+
 	if (area != SYSCONF_GetArea())
 		ret = SYSCONF_SetArea(area);
 	if (ret)
 		handleError("SYSCONF_SetArea", ret);
+
 	if (game != SYSCONF_GetRegion())
 		ret = SYSCONF_SetRegion(game);
 	if (ret)
 		handleError("SYSCONF_SetRegion", ret);
+
 	if (video != SYSCONF_GetVideo())
 		ret = SYSCONF_SetVideo(video);
 	if (ret)
 		handleError("SYSCONF_SetVideo", ret);
+
 	if (eula != SYSCONF_GetEULA())
 		ret = SYSCONF_SetEULA(eula);
 	if (ret)
@@ -180,42 +192,45 @@ void saveSettings(void)
 	wait_anyKey();
 }
 
-void updateSelected(int delta)
-{
-	if (selected + delta >= ITEMS || selected + delta < 0)
-		return;
+static char* itos(int i) {
+	static char buffer[12];
+	sprintf(buffer, "%d", i);
 
-	if (delta != 0)
-	{
-		// Remove the cursor from the last selected item
-		page_contents[selected][1] = ' ';
-		page_contents[selected][45] = ' ';
-		page_contents[selected][57] = ' ';
-		// Set new cursor location
-		selected += delta;
-	}
-
-	// Add the cursor to the now-selected item
-	page_contents[selected][1] = '>';
-	page_contents[selected][45] = '<';
-	page_contents[selected][57] = '>';
+	return buffer;
 }
+
+typedef struct
+{
+	const char* name;
+	const char* value;
+} page_item;
 
 void updatePage(void)
 {
+	const page_item page_items[] =
+	{
+		{ "Language Setting",			languages[lang]	},
+		{ "Console Area Setting",		areas[area]		},
+		{ "Game Region setting",		regions[game]	},
+		{ "Console Video Mode",			vmodes[video]	},
+		{ "Shop Country Code",			itos(country)	},
+		{ "End-User License Agreement", (eula == SYSCONF_ENOENT) ? "Disabled" : eulas[eula]},
 
-	sprintf(page_contents[0], "    %-40s   %10s  \n", "Language Setting:", languages[lang]);
-	sprintf(page_contents[1], "    %-40s   %10s   \n", "Console Area Setting:", areas[area]);
-	sprintf(page_contents[2], "    %-40s   %10s   \n", "Game Region Setting:", regions[game]);
-	sprintf(page_contents[3], "    %-40s   %10s  \n", "Console Video Mode:", vmodes[video]);
-	sprintf(page_contents[4], "    %-40s  %10d  \n", "Shop Country Code:", country);
-	sprintf(page_contents[5], "    %-40s   %10s  \n", "Services EULA:", (eula == SYSCONF_ENOENT) ? "Disabled" : eulas[eula]);
-	sprintf(page_contents[6], "    %-40s   %10s  \n", "Revert Settings", "Revert  ");
-	sprintf(page_contents[7], "    %-40s   %10s  \n", "Save Settings", "Save    ");
-	sprintf(page_contents[8], "    %-40s   %10s  \n", "Auto Fix Settings ", "Fix   ");
-	sprintf(page_contents[9], "    %-40s   %10s  \n", "Exit to the Homebrew Channel", "Exit    ");
+		{ "Revert Settings",	"Revert"	},
+		{ "Save Settings",		"Save"		},
+		{ "Auto Fix Settings",	"Fix"		},
 
-	updateSelected(0);
+		{ "Return to the Homebrew Channel", "Exit" },
+		{}
+	};
+	const char* s_selected =   "	%-40s < %s >";
+	const char* s_deselected = "	%-40s   %s  ";
+
+	for (int i = 0; page_items[i].name != NULL; i++)
+	{
+		sprintf(page_contents[i], (i == selected) ? s_selected : s_deselected,
+				page_items[i].name, page_items[i].value);
+	}
 }
 char AREAtoSysMenuRegion(int area)
 {
@@ -254,20 +269,30 @@ int main(int argc, char **argv)
 	u32 buttons;
 	int Current_Ios = 0;
 
-	ret = IOS_ReloadIOS(236);
-	if (ret != 0)
+	videoInit();
+	ret = IosPatch_FULL(true, true, false, false, IOS_GetVersion());
+	if (ret < 0)
 	{
-		ret = IOS_ReloadIOS(249);
-		if (ret != 0)
+		ret = IOS_ReloadIOS(236);
+		if (ret < 0)
 		{
-			IosPatch_FULL(true, true, false, false, 58);
+			ret = IOS_ReloadIOS(249);
+			if (ret < 0)
+			{
+				printf("\n\n\nUnable to find a suitable IOS to use. Consider updating the Homebrew Channel!\n");
+				printf("Exiting in 5 seconds...\n");
+				sleep(5);
+				return -1;
+			}
 		}
 	}
-	basicInit();
 
-	miscInit();
+	ISFS_Initialize();
+	WPAD_Init();
+
 	if (InitGecko())
 		USBGeckoOutput();
+
 	Current_Ios = IOS_GetVersion();
 	gprintf("\n\ncurrent_ios [%i] \n\n", Current_Ios);
 
@@ -288,40 +313,40 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-
 		PrintBanner();
 		printf("\n------------------------------------------------------------------------");
 		printf("Edit Region Settings");
 		if (sysmenu_region != 0 && sysmenu_region != AREAtoSysMenuRegion(area))
 			printf("    " WARNING_SIGN " \x1b[41;1mWARNING: AREA/SysMenu MISMATCH!\x1b[40m " WARNING_SIGN);
 		printf("\n------------------------------------------------------------------------");
-		for (i = 0; i < 4; i++)
-			printf(page_contents[i]);
 
-		printf("\t    Country Codes: \t1[JPN] 49[USA] 110[UK] 136[KOR]\n");
+		for (i = 0; i < 8; i++)
+			printf("%s\n", page_contents[i]);
 
-		for (i = i; i < 8; i++)
-			printf(page_contents[i]);
+		printf("\n\t    Country Codes: \t1[JPN] 49[USA] 110[UK] 136[KOR]\n");
+
 		printf("------------------------------------------------------------------------");
 		printf("Auto Fix - SysMenu Region: %c (v%u)\n", sysmenu_region, sysmenu_version);
 		printf("------------------------------------------------------------------------");
 		for (i = i; i < 9; i++)
-			printf(page_contents[i]);
+			printf("%s\n", page_contents[i]);
 		printf("------------------------------------------------------------------------");
 		printf("Exiting Options\n");
 		printf("------------------------------------------------------------------------");
 		for (i = i; i < ITEMS; i++)
-			printf(page_contents[i]);
+			printf("%s\n", page_contents[i]);
 		printf("------------------------------------------------------------------------");
 		Console_SetPosition(26, 0);
 		printf("Change Selection: [%s%s %s%s]\t\t\t\t\t\tSelect: [A]\tCredits: [1]", LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW);
 		buttons = wait_anyKey();
 		gprintf("\n\nselected [%i] \n\n", selected);
 		if (buttons & WPAD_BUTTON_DOWN)
-			updateSelected(1);
+			if (++selected > 9)
+				selected = 0;
 
 		if (buttons & WPAD_BUTTON_UP)
-			updateSelected(-1);
+			if (--selected < 0)
+				selected = 9;
 
 		if (buttons & WPAD_BUTTON_LEFT)
 		{
@@ -412,15 +437,7 @@ int main(int argc, char **argv)
 				saveSettings();
 				break;
 			case 8:
-				if (sysmenu_region == 85)
-				{ // usa
-					lang = 1;
-					area = 1;
-					game = 1;
-					video = 0;
-					country = 49;
-				}
-				else if (sysmenu_region == 74)
+				if (sysmenu_region == 'J')
 				{ // jpn
 					lang = 0;
 					area = 0;
@@ -428,7 +445,15 @@ int main(int argc, char **argv)
 					video = 0;
 					country = 1;
 				}
-				else if (sysmenu_region == 69)
+				else if (sysmenu_region == 'U')
+				{ // usa
+					lang = 1;
+					area = 1;
+					game = 1;
+					video = 0;
+					country = 49;
+				}
+				else if (sysmenu_region == 'E')
 				{ // EUR/PAL
 					lang = 1;
 					area = 2;
@@ -436,7 +461,7 @@ int main(int argc, char **argv)
 					video = 1;
 					country = 110;
 				}
-				else if (sysmenu_region == 75)
+				else if (sysmenu_region == 'K')
 				{ // KOR
 					lang = 1;
 					area = 7;
@@ -446,12 +471,13 @@ int main(int argc, char **argv)
 				}
 				else
 				{
-					printf("\nUnknown System Menu region \"%u\".\n", sysmenu_region);
+					printf("\nUnknown System Menu region '%c' (v%hu).\n", sysmenu_region ? sysmenu_region : ' ', sysmenu_version);
 					printf("Press any key to quit\n");
 					wait_anyKey();
 					exit(0);
 				}
-				saveSettings();
+				selected--;
+				// saveSettings();
 				break;
 			case 9:
 				needbreak = true;
@@ -479,7 +505,8 @@ int main(int argc, char **argv)
 	Console_SetPosition(26, 30);
 	Console_SetColors(BLACK, 0, GREEN, 0);
 	printf("Exiting");
-	miscDeInit();
+	ISFS_Deinitialize();
+	WPAD_Shutdown();
 
-	exit(0);
+	return 0;
 }
