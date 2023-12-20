@@ -32,6 +32,7 @@ distribution.
 #include <stdio.h>
 #include <string.h>
 #include <gccore.h>
+#include <sys/param.h>
 #include "detect_settings.h"
 #include "wiibasics.h"
 
@@ -207,16 +208,17 @@ char get_sysmenu_region(void)
 
 		default:
 			printf("Infected system menu (version number is %hu)\n", version);
+			printf("Press HOME to exit, any other button to try plan B.\n");
 			wait_anyKey();
 			break;
 	}
 
 	// Plan B
-	tikview view ATTRIBUTE_ALIGN(32) = {};
+	tikview view ATTRIBUTE_ALIGN(0x20) = {};
 	s32 cfd;
 	char region = 0;
-	unsigned char buffer[0x1000] = {};
-	const char search[] = "\\ipl\\bin\\RVL\\Final_";
+	unsigned char buffer[0x2000] ATTRIBUTE_ALIGN(0x20) = {};
+	const char search[] = "ipl\\bin\\RVL\\Final_";
 
 	ret = ES_GetTicketViews(TITLE_ID(1, 2), &view, 1);
 	if (ret < 0)
@@ -237,15 +239,19 @@ char get_sysmenu_region(void)
 
 	while (true)
 	{
-		ret = ES_ReadContent(cfd, buffer, sizeof(buffer));
+		ret = ES_ReadContent(cfd, buffer, sizeof(buffer) / 2);
 		if (ret <= 0)
 			break;
 
-		for (int i = 0; i < (ret - sizeof(search)); i++)
+		for (int i = 0; i < ret; i++) // Ok this is really bad. What if it cuts off at the 4kb boundary........ i have an idea
 		{
-			// Not looking for the null byte!!!!
-			if (memcmp(buffer, search, sizeof(search) - 1) == 0)
+			if (memcmp(buffer + i, search, MIN(sizeof(search) - 1, (ret - i))) == 0)
 			{
+				if ((ret - i) < sizeof(search))
+				//	printf("Region string was in the middle of the 4KB boundary.\nFilling in the other 4kb.\n");
+					ES_ReadContent(cfd, buffer + ret, sizeof(buffer) / 2);
+
+				printf("%s\n", buffer + i);
 				region = *(buffer + i + strlen(search));
 				break;
 			}
