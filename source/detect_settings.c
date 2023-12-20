@@ -217,15 +217,15 @@ char get_sysmenu_region(void)
 	tikview view ATTRIBUTE_ALIGN(0x20) = {};
 	s32 cfd;
 	char region = 0;
-	unsigned char buffer[0x2000] ATTRIBUTE_ALIGN(0x20) = {};
 	const char search[] = "ipl\\bin\\RVL\\Final_";
+	unsigned char* buffer = NULL;
 
 	ret = ES_GetTicketViews(TITLE_ID(1, 2), &view, 1);
 	if (ret < 0)
 	{
 		printf("Error! ES_GetTicketViews (ret = %i)\n", ret);
 		wait_anyKey();
-		return 0;
+		return '?';
 	}
 
 	// .......right, this isn't a vWii with Priiloader installed lol
@@ -234,45 +234,45 @@ char get_sysmenu_region(void)
 	{
 		printf("Error! ES_OpenTitleContent (ret = %i)\n", ret);
 		wait_anyKey();
-		return 0;
+		return '?';
 	}
 
-	while (true)
+	size_t size = ret = ES_SeekContent(cfd, 0, SEEK_END);
+	ES_SeekContent(cfd, 0, SEEK_SET);
+
+	buffer = memalign(0x20, size);
+	if (!buffer)
 	{
-		ret = ES_ReadContent(cfd, buffer, sizeof(buffer) / 2);
-		if (ret <= 0)
-			break;
-
-		for (int i = 0; i < ret; i++) // Ok this is really bad. What if it cuts off at the 4kb boundary........ i have an idea
-		{
-			if (memcmp(buffer + i, search, MIN(sizeof(search) - 1, (ret - i))) == 0)
-			{
-				if ((ret - i) < sizeof(search))
-				//	printf("Region string was in the middle of the 4KB boundary.\nFilling in the other 4kb.\n");
-					ES_ReadContent(cfd, buffer + ret, sizeof(buffer) / 2);
-
-				printf("%s\n", buffer + i);
-				region = *(buffer + i + strlen(search));
-				break;
-			}
-		}
-
-		if (region)
-			break;
+		printf("Out of memory!\n");
+		wait_anyKey();
+		exit(1);
 	}
 
+	ret = ES_ReadContent(cfd, buffer, size);
 	ES_CloseContent(cfd);
 	if (ret < 0)
 	{
 		printf("Error! ES_ReadContent (ret = %i)\n", ret);
 		wait_anyKey();
 	}
-	else if (!region)
+
+	for (int i = 0; i < size; i++)
 	{
-		printf("Unable to identify system menu region!!\n");
-		wait_anyKey();
+		if (memcmp(buffer + i, search, sizeof(search) - 1) == 0)
+		{
+			printf("Found you!!! offset=%08x\n%s\n", i, buffer + i);
+			region = *(buffer + i + strlen(search));
+			break;
+		}
 	}
 
-	return region;
+	free(buffer);
+	if (!region)
+	{
+		printf("Unable to identify system menu region!!\n");
+		sleep(2);
+	}
+
+	return region ? region : '?';
 
 }

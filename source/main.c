@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 	int Current_Ios = 0;
 
 	videoInit();
-	ret = IosPatch_FULL(true, true, false, false, IOS_GetVersion());
+	ret = 0; // IosPatch_FULL(true, true, false, false, IOS_GetVersion());
 	if (ret < 0)
 	{
 		ret = IOS_ReloadIOS(236);
