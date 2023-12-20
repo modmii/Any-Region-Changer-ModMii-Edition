@@ -45,15 +45,15 @@ distribution.
 #include "wiibasics.h"
 #endif
 
-static int __sysconf_inited = 0;
-static int __sysconf_buffer_txt_decrypted = 0;
 static u8 __sysconf_buffer[0x4000] ATTRIBUTE_ALIGN(32);
 static char __sysconf_txt_buffer[0x101] ATTRIBUTE_ALIGN(32);
+
+static int __sysconf_inited = 0;
+static int __sysconf_buffer_txt_decrypted = 0;
 static int __sysconf_buffer_updated = 0;
 static int __sysconf_txt_buffer_updated = 0;
 
 static const char __sysconf_file[] ATTRIBUTE_ALIGN(32) = "/shared2/sys/SYSCONF";
-// static const char __sysconf_txt_file[] ATTRIBUTE_ALIGN(32) = "/title/00000001/00000002/data/setting.txt";
 static const char __sysconf_txt_file[] ATTRIBUTE_ALIGN(32) = "/title/00000001/00000002/data/setting.txt";
 
 int __SYSCONF_EndOfTextOffset(void)
@@ -173,24 +173,24 @@ s32 SYSCONF_Init(void)
 	if (__sysconf_inited)
 		return 0;
 
-	fd = IOS_Open(__sysconf_file, 1);
-	if (fd < 0)
-		return fd;
+	ret = fd = ISFS_Open(__sysconf_file, ISFS_OPEN_READ);
+	if (ret < 0)
+		return ret;
 
 	memset(__sysconf_buffer, 0, 0x4000);
 	memset(__sysconf_txt_buffer, 0, 0x101);
 
-	ret = IOS_Read(fd, __sysconf_buffer, 0x4000);
+	ret = ISFS_Read(fd, __sysconf_buffer, 0x4000);
 	IOS_Close(fd);
 	if (ret != 0x4000)
 		return SYSCONF_EBADFILE;
 
-	fd = IOS_Open(__sysconf_txt_file, 1);
-	if (fd < 0)
-		return fd;
+	ret = fd = ISFS_Open(__sysconf_txt_file, ISFS_OPEN_READ);
+	if (ret < 0)
+		return ret;
 
-	ret = IOS_Read(fd, __sysconf_txt_buffer, 0x100);
-	IOS_Close(fd);
+	ret = ISFS_Read(fd, __sysconf_txt_buffer, 0x100);
+	ISFS_Close(fd);
 	if (ret != 0x100)
 		return SYSCONF_EBADFILE;
 
@@ -205,7 +205,6 @@ s32 SYSCONF_Init(void)
 
 int __SYSCONF_WriteTxtBuffer(void)
 {
-	u64 tid;
 	int ret, fd;
 
 	if (!__sysconf_inited)
@@ -214,6 +213,7 @@ int __SYSCONF_WriteTxtBuffer(void)
 	if (!__sysconf_txt_buffer_updated)
 		return 0;
 
+	/* guys just use libruntimeiospatch or a cios for nand perms
 	ret = ES_GetTitleID(&tid);
 	if (ret < 0)
 		return ret;
@@ -227,21 +227,24 @@ int __SYSCONF_WriteTxtBuffer(void)
 	ret = ISFS_SetAttr(__sysconf_txt_file, 0x1000, 1, 0, 3, 3, 3);
 	if (ret < 0)
 		return ret;
+	*/
 
-	fd = IOS_Open(__sysconf_txt_file, 2);
+	fd = ISFS_Open(__sysconf_txt_file, ISFS_OPEN_WRITE);
 	if (fd < 0)
 		return fd;
 
-	ret = IOS_Write(fd, __sysconf_txt_buffer, 0x100);
-	IOS_Close(fd);
+	ret = ISFS_Write(fd, __sysconf_txt_buffer, 0x100);
+	ISFS_Close(fd);
 	if (ret != 0x100)
 		return SYSCONF_EBADWRITE;
 
+	/*
 	ret = ISFS_SetAttr(__sysconf_txt_file, 0x1000, 1, 0, 1, 1, 1);
 	if (ret < 0)
 		return ret;
+	*/
 
-	__sysconf_buffer_updated = 0;
+	__sysconf_txt_buffer_updated = 0;
 
 	return 0;
 }
@@ -263,7 +266,7 @@ int __SYSCONF_WriteBuffer(void)
 	ret = IOS_Write(fd, __sysconf_buffer, 0x4000);
 	IOS_Close(fd);
 	if (ret != 0x4000)
-		return SYSCONF_EBADFILE;
+		return SYSCONF_EBADWRITE;
 
 	__sysconf_buffer_updated = 0;
 	return 0;

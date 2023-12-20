@@ -21,6 +21,9 @@ documentation would be appreciated but is not required.
 2.Altered source versions must be plainly marked as such, and
 must not be misrepresented as being the original software.
 
+Hi i made some changes
+- thepikachugamer
+
 3.This notice may not be removed or altered from any source
 distribution.
 
@@ -29,15 +32,17 @@ distribution.
 #include <stdio.h>
 #include <string.h>
 #include <gccore.h>
-
-#include "id.h"
-#include "wiibasics.h"
 #include "detect_settings.h"
+#include "wiibasics.h"
 
-u16 get_installed_title_version(u64 title)
+/* (gdb) print (unsigned short)-1
+ * $1 = 65535
+ * This is a valid version number */
+// u16 get_installed_title_version(u64 title)
+s32 get_installed_title_version(u64 title)
 {
 	s32 ret, fd;
-	static char filepath[256] ATTRIBUTE_ALIGN(32);
+	static char filepath[ISFS_MAXPATH] ATTRIBUTE_ALIGN(32);
 
 	// Check to see if title exists
 	if (ES_GetDataDir(title, filepath) >= 0)
@@ -56,37 +61,29 @@ u16 get_installed_title_version(u64 title)
 
 			sprintf(filepath, "/title/%08x/%08x/content/title.tmd", TITLE_UPPER(title), TITLE_LOWER(title));
 
-			ret = ISFS_Open(filepath, ISFS_OPEN_READ);
-			if (ret <= 0)
+			fd = ret = ISFS_Open(filepath, ISFS_OPEN_READ);
+			if (ret < 0)
 			{
 				printf("Error! ISFS_Open (ret = %d)\n", ret);
-				return 0;
+				return ret;
 			}
-
-			fd = ret;
 
 			ret = ISFS_Seek(fd, 0x1dc, 0);
 			if (ret < 0)
 			{
 				printf("Error! ISFS_Seek (ret = %d)\n", ret);
-				return 0;
+				return ret;
 			}
 
 			ret = ISFS_Read(fd, tmd_buf, 2);
+			ISFS_Close(fd);
 			if (ret < 0)
 			{
 				printf("Error! ISFS_Read (ret = %d)\n", ret);
-				return 0;
+				return ret;
 			}
 
-			ret = ISFS_Close(fd);
-			if (ret < 0)
-			{
-				printf("Error! ISFS_Close (ret = %d)\n", ret);
-				return 0;
-			}
-
-			return be16(tmd_buf);
+			return *(u16*)tmd_buf;
 		}
 		else
 		{
@@ -98,13 +95,14 @@ u16 get_installed_title_version(u64 title)
 			if (ret < 0)
 			{
 				printf("Error! ES_GetStoredTMD: %d\n", ret);
-				return -1;
+				// return -1;
+				return ret;
 			}
 			tmd *t = SIGNATURE_PAYLOAD(s_tmd);
 			return t->title_version;
 		}
 	}
-	return 0;
+	return -106;
 }
 
 u64 get_title_ios(u64 title)
@@ -159,7 +157,8 @@ u64 get_title_ios(u64 title)
 				return 0;
 			}
 
-			return be64(tmd_buf);
+			// it's very nicely aligned i don't think the broadway will crash with this one
+			return *(u64*)tmd_buf;
 		}
 		else
 		{
@@ -181,122 +180,93 @@ u64 get_title_ios(u64 title)
 }
 
 /* Get Sysmenu Region identifies the region of the system menu (not your Wii)
-  by looking into it's resource content file for region information. */
+  by looking into it's resource content file for region information. */ // <-- Semibricked Wiis:
 char get_sysmenu_region(void)
 {
-	s32 ret, cfd;
-	static u8 fbuffer[0x500] ATTRIBUTE_ALIGN(32);
-	static tikview viewdata[0x10] ATTRIBUTE_ALIGN(32);
-	u32 views;
-	static u64 tid ATTRIBUTE_ALIGN(32) = TITLE_ID(1, 2);
-	u8 region, match[] = "FINAL";
+	s32 ret;
+	u16 version;
 
-	/*ret = ES_SetUID(TITLE_ID(1,2));
-	if (ret){
-		printf("Error! ES_GetSetUID %d\n", ret);
-		wait_anyKey();
+	version = get_installed_title_version(TITLE_ID(1, 2));
+	if (version <= 0)
 		return 0;
-	}
 
-	ret = ES_GetTitleID(&tid);
-	if (ret){
-		printf("Error! ES_GetTitleID %d\n", ret);
-		wait_anyKey();
-		return 0;
-	}
-	if (tid != TITLE_ID(1,2)){
-		printf("Error! Not System Menu! %016llx\n", tid);
-		wait_anyKey();
-		return 0;
-	}
-	ret = ES_OpenContent(1);
-	if (ret < 0)
-	{
-		printf("Error! ES_OpenContent (ret = %d)\n", ret);
-		wait_anyKey();
-		return 0;
-	}*/
+	/* "mauifrog's 4.1 mod"(?) */
+	if ((version / 1000) == 54)
+		version %= 1000;
 
-	ret = ES_GetNumTicketViews(tid, &views);
-	if (ret < 0)
+	switch (version & 0b0000000000001111)
 	{
-		printf(" Error! ES_GetNumTickets (ret = %d)\n", ret);
-		wait_anyKey();
-		return ret;
-	}
+		case 0:
+			return 'J';
+		case 1:
+			return 'U';
+		case 2:
+			return 'E';
+		case 6:
+			return 'K';
 
-	if (!views)
-	{
-		printf(" No tickets found!\n");
-		wait_anyKey();
-		return 0;
-	}
-	else if (views > 16)
-	{
-		printf(" Too many ticket views! (views = %d)\n", views);
-		wait_anyKey();
-		return 0;
-	}
-
-	ret = ES_GetTicketViews(tid, viewdata, 1);
-	if (ret < 0)
-	{
-		printf("Error! ES_OpenTitleContent (ret = %d)\n", ret);
-		wait_anyKey();
-		return 0;
-	}
-
-	ret = ES_OpenTitleContent(tid, viewdata, 1);
-	if (ret < 0)
-	{
-		printf("Error! ES_OpenTitleContent (ret = %d)\n", ret);
-		wait_anyKey();
-		return 0;
-	}
-
-	cfd = ret;
-	region = 0;
-	while (!region)
-	{
-		int i;
-		ret = ES_ReadContent(cfd, fbuffer, 0x500);
-		if (ret < 0)
-		{
-			printf("Error! ES_ReadContent (ret = %d)\n", ret);
+		default:
+			printf("Infected system menu (version number is %hu)\n", version);
 			wait_anyKey();
-			return 0;
-		}
+			break;
+	}
 
-		for (i = 0; i < 0x500; i++)
+	// Plan B
+	tikview view ATTRIBUTE_ALIGN(32) = {};
+	s32 cfd;
+	char region = 0;
+	unsigned char buffer[0x1000] = {};
+	const char search[] = "\\ipl\\bin\\RVL\\Final_";
+
+	ret = ES_GetTicketViews(TITLE_ID(1, 2), &view, 1);
+	if (ret < 0)
+	{
+		printf("Error! ES_GetTicketViews (ret = %i)\n", ret);
+		wait_anyKey();
+		return 0;
+	}
+
+	// .......right, this isn't a vWii with Priiloader installed lol
+	cfd = ret = ES_OpenTitleContent(TITLE_ID(1, 2), &view, 1);
+	if (ret < 0)
+	{
+		printf("Error! ES_OpenTitleContent (ret = %i)\n", ret);
+		wait_anyKey();
+		return 0;
+	}
+
+	while (true)
+	{
+		ret = ES_ReadContent(cfd, buffer, sizeof(buffer));
+		if (ret <= 0)
+			break;
+
+		for (int i = 0; i < (ret - sizeof(search)); i++)
 		{
-			if (fbuffer[i] == 'F')
+			// Not looking for the null byte!!!!
+			if (memcmp(buffer, search, sizeof(search) - 1) == 0)
 			{
-				if (!memcmp(&fbuffer[i], match, 6))
-				{
-					region = fbuffer[i + 6];
-					break;
-				}
+				region = *(buffer + i + strlen(search));
+				break;
 			}
 		}
-	}
-	ret = ES_CloseContent(cfd);
-	if (ret < 0)
-	{
-		printf("Error! ES_CloseContent (ret = %d)\n", ret);
-		wait_anyKey();
-		return 0;
+
+		if (region)
+			break;
 	}
 
-	switch (region)
+	ES_CloseContent(cfd);
+	if (ret < 0)
 	{
-	case 'U':
-	case 'E':
-	case 'J':
-	case 'K':
-		return region;
-		break;
-	default:
-		return -1;
-		break;
+		printf("Error! ES_ReadContent (ret = %i)\n", ret);
+		wait_anyKey();
 	}
+	else if (!region)
+	{
+		printf("Unable to identify system menu region!!\n");
+		wait_anyKey();
+	}
+
+	return region;
+
 }
