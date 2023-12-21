@@ -21,6 +21,9 @@ documentation would be appreciated but is not required.
 2.Altered source versions must be plainly marked as such, and
 must not be misrepresented as being the original software.
 
+i modified it a ton sorry tona
+- thepikachugamer
+
 3.This notice may not be removed or altered from any source
 distribution.
 
@@ -33,7 +36,6 @@ distribution.
 #include <string.h>
 
 #include "wiibasics.h"
-#include "id.h"
 #include "gecko.h"
 
 #define MAX_WIIMOTES 4
@@ -42,54 +44,50 @@ static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 int ConsoleRows;
 int ConsoleCols;
-u16 be16(const u8 *p)
-{
-	return (p[0] << 8) | p[1];
-}
 
-u32 be32(const u8 *p)
+/* What are these for anyways
+typedef struct
 {
-	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-}
+	u64 titleID;
+	u32 uid;
+} uidEntry;
 
-u64 be64(const u8 *p)
+uidEntry findUIDEntry(u64 titleID, u32 uid)
 {
-	return ((u64)be32(p) << 32) | be32(p + 4);
-}
+	s32 ret, fd;
+	uidEntry entry ATTRIBUTE_ALIGN(0x20);
 
-u32 getTitleIDUID(u64 titleID)
-{
-	s32 ret, i;
-	static u8 uid_buffer[0x1000] ATTRIBUTE_ALIGN(32);
-	u32 size;
-	ret = ISFS_ReadFileToArray("/sys/uid.sys", uid_buffer, 0x1000, &size);
+	if (titleID && uid)
+		return 0;
+
+	fd = ret = ISFS_Open("/sys/uid.sys", ISFS_OPEN_READ);
 	if (ret < 0)
 		return 0;
 
-	for (i = 0; i < size; i += 12)
-		if (be64(&uid_buffer[i]) == titleID)
-			return be32(&uid_buffer[i + 8]);
+	while (true)
+	{
+		ret = ISFS_Read(fd, &entry, sizeof(uidEntry));
+		if (ret < sizeof(uidEntry))
+			break;
 
-	return 0;
+		if (entry.titleID == titleID)
+		{
+			uid = entry.uid;
+			break;
+		}
+		else if (entry.uid == uid)
+		{
+			titleID = entry.titleID;
+			break;
+		}
+	}
+	ISFS_Close(fd);
+	return (uidEntry){ titleID, uid };
 }
-
-u64 getUIDTitleID(u32 uid)
-{
-	s32 ret, i;
-	static u8 uid_buffer[0x1000] ATTRIBUTE_ALIGN(32);
-	u32 size;
-	ret = ISFS_ReadFileToArray("/sys/uid.sys", uid_buffer, 0x1000, &size);
-	if (ret < 0)
-		return 0;
-
-	for (i = 8; i < size; i += 12)
-		if (be32(&uid_buffer[i]) == uid)
-			return be64(&uid_buffer[i - 8]);
-	return 0;
-}
+*/
 
 /* Basic init taken pretty directly from the libOGC examples */
-void basicInit(void)
+void videoInit(void)
 {
 	// Initialise the video system
 	VIDEO_Init();
@@ -182,6 +180,7 @@ void PrintBanner()
 	PrintCenter(text, ConsoleCols);
 	Console_SetColors(BLACK, 0, WHITE, 2);
 }
+/*
 void miscInit(void)
 {
 	int ret;
@@ -189,7 +188,8 @@ void miscInit(void)
 	// This function initialises the attached controllers
 	WPAD_Init();
 
-	Identify_SU();
+	// NO
+//	Identify_SU();
 
 	gprintf("Initializing Filesystem driver...");
 	fflush(stdout);
@@ -198,7 +198,7 @@ void miscInit(void)
 	if (ret < 0)
 	{
 		gprintf("\nError! ISFS_Initialize (ret = %d)\n", ret);
-		wait_anyKey();
+	//	wait_anyKey();
 		exit(0);
 	}
 	else
@@ -244,6 +244,7 @@ void miscDeInit(void)
 	fflush(stdout);
 	ISFS_Deinitialize();
 }
+*/
 
 u32 getButtons(void)
 {
@@ -275,17 +276,7 @@ u32 wait_key(u32 button)
 	u32 pressed;
 	do
 	{
-		VIDEO_WaitVSync();
-		pressed = getButtons();
-		if (pressed & WPAD_BUTTON_HOME)
-		{
-			Console_SetPosition(26, 0);
-			ClearLine();
-			Console_SetPosition(26, 30);
-			Console_SetColors(BLACK, 0, GREEN, 0);
-			printf("Exiting");
-			exit(0);
-		}
+		pressed = wait_anyKey();
 	} while (!(pressed & button));
 
 	return pressed;
@@ -352,9 +343,13 @@ bool yes_or_no(void)
 	return yes;
 }
 
-/* Reads a file from ISFS to an array in memory */
+/* Reads a file from ISFS to an array in memory
 s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 *file_size)
 {
+	printf("Stubbed. We have libruntimeiospatch!!");
+	wait_anyKey();
+	return -1;
+
 	s32 ret, fd;
 	static fstats filestats ATTRIBUTE_ALIGN(32);
 
@@ -405,9 +400,13 @@ s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 
 	return 0;
 }
 
-/* Writes from an array in memory to a file with ISFS */
+// Writes from an array in memory to a file with ISFS
 s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array_size, u32 ownerID, u16 groupID, u8 attr, u8 own_perm, u8 group_perm, u8 other_perm)
 {
+	printf("Stubbed. We have libruntimeiospatch!!");
+	wait_anyKey();
+	return -1;
+
 	s32 ret, fd = 0, out;
 	u64 currentTid;
 	u32 realownid;
@@ -509,7 +508,7 @@ s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array
 		return -1;
 	}
 	fd = 0;
-	*/
+	*//*
 	ret = ISFS_GetAttr(filepath, &realownid, &realgroupid, &realattr, &realownperm, &realgroupperm, &realotherperm);
 	if (ret < 0)
 	{
@@ -567,3 +566,4 @@ cleanup:
 	}
 	return out;
 }
+*/

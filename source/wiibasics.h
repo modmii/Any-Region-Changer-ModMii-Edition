@@ -21,6 +21,8 @@ documentation would be appreciated but is not required.
 2.Altered source versions must be plainly marked as such, and
 must not be misrepresented as being the original software.
 
+See the source file
+
 3.This notice may not be removed or altered from any source
 distribution.
 
@@ -54,21 +56,31 @@ distribution.
 #define RIGHT_ARROW "\x10"
 
 #define ARCME_VERSION 1.0
-#define ARCME_REV 6
+#define ARCME_REV 7
 
 // be functions from segher's wii.git
-u16 be16(const u8 *p);
-u32 be32(const u8 *p);
-u64 be64(const u8 *p);
-u64 be34(const u8 *p);
+static inline u16 be16(const u8 *p)
+{
+	return (p[0] << 8) | p[1];
+}
 
-// Do basic Wii init: Video, console, WPAD
-void basicInit(void);
+static inline u32 be32(const u8 *p)
+{
+	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+}
+
+static inline u64 be64(const u8 *p)
+{
+	return ((u64)be32(p) << 32) | be32(p + 4);
+}
+// u64 be34(const u8 *p); // < ???
+
+void videoInit(void);
 
 // Do our custom init: Identify and initialized ISFS driver
-void miscInit(void);
+// void miscInit(void);
 
-void IdentSysMenu(void);
+// void IdentSysMenu(void);
 
 // Clean up after ourselves (Deinit ISFS)
 void miscDeInit(void);
@@ -83,10 +95,10 @@ u32 wait_key(u32 button);
 void hex_print_array16(const u8 *array, u32 size);
 
 /* Reads a file from ISFS to an array in memory */
-s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 *file_size);
+// s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 *file_size);
 
 /* Writes from an array in memory to a file with ISFS */
-s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array_size, u32 ownerID, u16 groupID, u8 attr, u8 own_perm, u8 group_perm, u8 other_perm);
+// s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array_size, u32 ownerID, u16 groupID, u8 attr, u8 own_perm, u8 group_perm, u8 other_perm);
 
 bool yes_or_no();
 void ClearScreen();
