@@ -270,13 +270,13 @@ int main(int argc, char **argv)
 	int Current_Ios = 0;
 
 	videoInit();
-	ret = 0; // IosPatch_FULL(true, true, false, false, IOS_GetVersion());
+	ret = IosPatch_RUNTIME(true, false, false, false);
 	if (ret < 0)
 	{
-		ret = IOS_ReloadIOS(236);
+		ret = IOS_ReloadIOS(249);
 		if (ret < 0)
 		{
-			ret = IOS_ReloadIOS(249);
+			ret = IOS_ReloadIOS(236);
 			if (ret < 0)
 			{
 				printf("\n\n\nUnable to find a suitable IOS to use. Consider updating the Homebrew Channel!\n");
@@ -289,6 +289,7 @@ int main(int argc, char **argv)
 
 	ISFS_Initialize();
 	WPAD_Init();
+	PAD_Init();
 
 	if (InitGecko())
 		USBGeckoOutput();
@@ -471,7 +472,7 @@ int main(int argc, char **argv)
 				}
 				else
 				{
-					printf("\nUnknown System Menu region '%c' (v%hu).\n", sysmenu_region ? sysmenu_region : ' ', sysmenu_version);
+					printf("\nUnknown System Menu region '%c' (v%hu).\n", sysmenu_region ?: ' ', sysmenu_version);
 					printf("Press any key to quit\n");
 					wait_anyKey();
 					exit(0);

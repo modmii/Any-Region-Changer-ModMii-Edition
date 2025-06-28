@@ -221,13 +221,12 @@ int __SYSCONF_WriteTxtBuffer(void)
 	if (tid != 0x100000002LL)
 		return SYSCONF_EPERMS;
 
-	if (__sysconf_buffer_txt_decrypted)
-		__SYSCONF_DecryptEncryptTextBuffer();
-
 	ret = ISFS_SetAttr(__sysconf_txt_file, 0x1000, 1, 0, 3, 3, 3);
 	if (ret < 0)
 		return ret;
 	*/
+	if (__sysconf_buffer_txt_decrypted)
+		__SYSCONF_DecryptEncryptTextBuffer();
 
 	fd = ISFS_Open(__sysconf_txt_file, ISFS_OPEN_WRITE);
 	if (fd < 0)
