@@ -33,6 +33,7 @@ distribution.
 #include <stdlib.h>
 #include <gccore.h>
 #include <wiiuse/wpad.h>
+#include <ogc/pad.h>
 #include <string.h>
 
 #include "wiibasics.h"
@@ -44,47 +45,6 @@ static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 int ConsoleRows;
 int ConsoleCols;
-
-/* What are these for anyways
-typedef struct
-{
-	u64 titleID;
-	u32 uid;
-} uidEntry;
-
-uidEntry findUIDEntry(u64 titleID, u32 uid)
-{
-	s32 ret, fd;
-	uidEntry entry ATTRIBUTE_ALIGN(0x20);
-
-	if (titleID && uid)
-		return 0;
-
-	fd = ret = ISFS_Open("/sys/uid.sys", ISFS_OPEN_READ);
-	if (ret < 0)
-		return 0;
-
-	while (true)
-	{
-		ret = ISFS_Read(fd, &entry, sizeof(uidEntry));
-		if (ret < sizeof(uidEntry))
-			break;
-
-		if (entry.titleID == titleID)
-		{
-			uid = entry.uid;
-			break;
-		}
-		else if (entry.uid == uid)
-		{
-			titleID = entry.titleID;
-			break;
-		}
-	}
-	ISFS_Close(fd);
-	return (uidEntry){ titleID, uid };
-}
-*/
 
 /* Basic init taken pretty directly from the libOGC examples */
 void videoInit(void)
@@ -249,7 +209,21 @@ void miscDeInit(void)
 u32 getButtons(void)
 {
 	WPAD_ScanPads();
-	return WPAD_ButtonsDown(0);
+	PAD_ScanPads();
+
+	u32 buttons = WPAD_ButtonsDown(0);
+	u32 buttons_gc = PAD_ButtonsDown(0);
+	if (buttons_gc & PAD_BUTTON_A) buttons |= WPAD_BUTTON_A;
+	if (buttons_gc & PAD_BUTTON_B) buttons |= WPAD_BUTTON_B;
+	if (buttons_gc & PAD_BUTTON_X) buttons |= WPAD_BUTTON_1;
+	if (buttons_gc & PAD_BUTTON_Y) buttons |= WPAD_BUTTON_2;
+	if (buttons_gc & PAD_BUTTON_START) buttons |= WPAD_BUTTON_HOME;
+	if (buttons_gc & PAD_BUTTON_UP) buttons |= WPAD_BUTTON_UP;
+	if (buttons_gc & PAD_BUTTON_DOWN) buttons |= WPAD_BUTTON_DOWN;
+	if (buttons_gc & PAD_BUTTON_LEFT) buttons |= WPAD_BUTTON_LEFT;
+	if (buttons_gc & PAD_BUTTON_RIGHT) buttons |= WPAD_BUTTON_RIGHT;
+
+	return buttons;
 }
 
 u32 wait_anyKey(void)
@@ -342,228 +316,3 @@ bool yes_or_no(void)
 	printf("\n");
 	return yes;
 }
-
-/* Reads a file from ISFS to an array in memory
-s32 ISFS_ReadFileToArray(const char *filepath, u8 *filearray, u32 max_size, u32 *file_size)
-{
-	printf("Stubbed. We have libruntimeiospatch!!");
-	wait_anyKey();
-	return -1;
-
-	s32 ret, fd;
-	static fstats filestats ATTRIBUTE_ALIGN(32);
-
-	*file_size = 0;
-	ret = ISFS_Open(filepath, ISFS_OPEN_READ);
-	if (ret <= 0)
-	{
-		printf("Error! ISFS_Open (ret = %d)\n", ret);
-		return -1;
-	}
-
-	fd = ret;
-
-	ret = ISFS_GetFileStats(fd, &filestats);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_GetFileStats (ret = %d)\n", ret);
-		return -1;
-	}
-
-	*file_size = filestats.file_length;
-
-	if (*file_size > max_size)
-	{
-		printf("File is too large! Size: %u Max: %u", *file_size, max_size);
-		return -1;
-	}
-
-	ret = ISFS_Read(fd, filearray, *file_size);
-	*file_size = ret;
-	if (ret < 0)
-	{
-		printf("Error! ISFS_Read (ret = %d)\n", ret);
-		return -1;
-	}
-	else if (ret != filestats.file_length)
-	{
-		printf("Error! ISFS_Read Only read: %d\n", ret);
-		return -1;
-	}
-
-	ret = ISFS_Close(fd);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_Close (ret = %d)\n", ret);
-		return -1;
-	}
-	return 0;
-}
-
-// Writes from an array in memory to a file with ISFS
-s32 ISFS_WriteFileFromArray(const char *filepath, const u8 *filearray, u32 array_size, u32 ownerID, u16 groupID, u8 attr, u8 own_perm, u8 group_perm, u8 other_perm)
-{
-	printf("Stubbed. We have libruntimeiospatch!!");
-	wait_anyKey();
-	return -1;
-
-	s32 ret, fd = 0, out;
-	u64 currentTid;
-	u32 realownid;
-	u16 realgroupid;
-	u8 realattr, realownperm, realgroupperm, realotherperm;
-	static fstats filestats ATTRIBUTE_ALIGN(32);
-
-	out = 0;
-
-	ret = ISFS_Open(filepath, ISFS_OPEN_WRITE);
-	if (ret == -102)
-	{
-
-		printf("\tMaking file writable...\n");
-		ret = ISFS_SetAttr(filepath, ownerID, groupID, attr, 3, 3, 3);
-		if (ret < 0)
-		{
-			printf("Error! ISFS_SetAttr (ret = %d)\n", ret);
-			out = -1;
-			goto cleanup;
-		}
-
-		return ISFS_WriteFileFromArray(filepath, filearray, array_size, ownerID, groupID, attr, own_perm, group_perm, other_perm);
-	}
-	else if (ret == -106)
-	{
-
-		printf("\tCreating file...\n");
-		ret = ISFS_CreateFile(filepath, attr, 3, 3, 3);
-		if (ret < 0)
-		{
-			printf("Error! ISFS_CreateFile (ret = %d)\n", ret);
-			out = -1;
-			goto cleanup;
-		}
-
-		return ISFS_WriteFileFromArray(filepath, filearray, array_size, ownerID, groupID, attr, own_perm, group_perm, other_perm);
-	}
-	else if (ret <= 0)
-	{
-		printf("Error! ISFS_Open WRITE (ret = %d)\n", ret);
-		out = -1;
-		goto cleanup;
-	}
-
-	fd = ret;
-
-	ret = ISFS_Seek(fd, 0, 0);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_Seek (ret = %d)\n", ret);
-		out = -1;
-		goto cleanup;
-	}
-
-	ret = ISFS_Write(fd, filearray, array_size);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_Write (ret = %d)\n", ret);
-		out = -1;
-		goto cleanup;
-	}
-
-	if (ret != array_size)
-	{
-		printf("Filesize is wrong! Wrote:%u Expect:%u", filestats.file_length, array_size);
-		out = -1;
-	}
-
-	ret = ISFS_Close(fd);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_Close (ret = %d)\n", ret);
-		return -1;
-	}
-	fd = 0;
-
-	/*
-	ret = ISFS_Open(filepath, ISFS_OPEN_READ);
-	if (ret <= 0) {
-		printf("Error! ISFS_Open READ (ret = %d)\n", ret);
-		out = -1;
-		goto cleanup;
-	}
-	fd = ret;
-
-	ret = ISFS_GetFileStats(fd, &filestats);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_GetFileStats (ret = %d)\n", ret);
-		out = -1;
-		goto cleanup;
-	}
-
-	ret = ISFS_Close(fd);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_Close (ret = %d)\n", ret);
-		return -1;
-	}
-	fd = 0;
-	*//*
-	ret = ISFS_GetAttr(filepath, &realownid, &realgroupid, &realattr, &realownperm, &realgroupperm, &realotherperm);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_GetAttr (ret = %d)\n", ret);
-		out = -1;
-	}
-
-	if (realownid != ownerID)
-	{
-		ret = ES_GetTitleID(&currentTid);
-		if (ret)
-		{
-			printf("Fail GetTitleID %d", ret);
-			if (wait_key(WPAD_BUTTON_A | WPAD_BUTTON_B) & WPAD_BUTTON_B)
-				goto cleanup;
-		}
-		ret = ES_SetUID(getUIDTitleID(ownerID));
-		if (ret)
-		{
-			printf("Couldn't set OwnerID, using current owner ID\n");
-			if (wait_key(WPAD_BUTTON_A | WPAD_BUTTON_B) & WPAD_BUTTON_B)
-				goto cleanup;
-			ownerID = realownid;
-		}
-	}
-
-	ret = ISFS_SetAttr(filepath, ownerID, groupID, attr, own_perm, group_perm, other_perm);
-	if (ret < 0)
-	{
-		printf("Error! ISFS_SetAttr (ret = %d)\n", ret);
-		out = -1;
-		goto cleanup;
-	}
-
-	if (realownid != ownerID)
-	{
-		ret = ES_SetUID(currentTid);
-		if (ret)
-		{
-			printf("Fail SetUID %d", ret);
-			if (wait_key(WPAD_BUTTON_A | WPAD_BUTTON_B) & WPAD_BUTTON_B)
-				goto cleanup;
-		}
-	}
-
-cleanup:
-	if (fd)
-	{
-		ret = ISFS_Close(fd);
-		if (ret < 0)
-		{
-			printf("Error! ISFS_Close (ret = %d)\n", ret);
-			return -1;
-		}
-	}
-	return out;
-}
-*/

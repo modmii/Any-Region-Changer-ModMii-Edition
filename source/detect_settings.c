@@ -29,7 +29,10 @@ distribution.
 
 -------------------------------------------------------------*/
 
+#define _GNU_SOURCE /* for memmem */
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <gccore.h>
 #include <sys/param.h>
@@ -195,7 +198,7 @@ char get_sysmenu_region(void)
 	if ((version / 1000) == 54)
 		version %= 1000;
 
-	switch (version & 0b0000000000001111)
+	switch (version & 0b0000000000011111)
 	{
 		case 0:
 			return 'J';
@@ -240,7 +243,7 @@ char get_sysmenu_region(void)
 	size_t size = ret = ES_SeekContent(cfd, 0, SEEK_END);
 	ES_SeekContent(cfd, 0, SEEK_SET);
 
-	buffer = memalign(0x20, size);
+	buffer = aligned_alloc(0x20, size);
 	if (!buffer)
 	{
 		printf("Out of memory!\n");
@@ -256,14 +259,11 @@ char get_sysmenu_region(void)
 		wait_anyKey();
 	}
 
-	for (int i = 0; i < size; i++)
+	char* thestring = memmem(buffer, size, search, strlen(search));
+	if (thestring)
 	{
-		if (memcmp(buffer + i, search, sizeof(search) - 1) == 0)
-		{
-			printf("Found you!!! offset=%08x\n%s\n", i, buffer + i);
-			region = *(buffer + i + strlen(search));
-			break;
-		}
+		printf("Found you!!! %s\n", thestring);
+		region = thestring[strlen(thestring)];
 	}
 
 	free(buffer);
