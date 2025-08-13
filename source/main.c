@@ -36,7 +36,7 @@ distribution.
 #include <wiiuse/wpad.h>
 
 #include "wiibasics.h"
-#include "runtimeiospatch.h"
+#include "libpatcher/libpatcher.h"
 #include "sysconf.h"
 #include "detect_settings.h"
 #include "gecko.h"
@@ -270,21 +270,19 @@ int main(int argc, char **argv)
 	int Current_Ios = 0;
 
 	videoInit();
-	ret = IosPatch_RUNTIME(true, false, false, false);
-	if (ret < 0)
+	if (!apply_patches())
 	{
-		ret = IOS_ReloadIOS(249);
-		if (ret < 0)
-		{
-			ret = IOS_ReloadIOS(236);
-			if (ret < 0)
-			{
-				printf("\n\n\nUnable to find a suitable IOS to use. Consider updating the Homebrew Channel!\n");
-				printf("Exiting in 5 seconds...\n");
-				sleep(5);
-				return -1;
-			}
-		}
+		printf("\n\n\nFailed to apply IOS patches. Is your Homebrew Channel up to date?\n");
+		printf("Exiting in 10 seconds...\n");
+		sleep(10);
+		return -1;
+	}
+
+	// we have AHBPROT starting here
+	if ((read32(0xD8005A0) /* LT_CHIPREVID */ & 0xFFFF0000) == 0xCAFE0000) {
+		printf("\n\n\nThis software cannot be used on a Wii U!!n\");
+		sleep(5);
+		return -1;
 	}
 
 	ISFS_Initialize();
