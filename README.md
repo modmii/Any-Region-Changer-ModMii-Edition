@@ -10,7 +10,7 @@ ARCME is a mod of Any Region Changer (ARC). If ARCME detects a region mismatch, 
  - ARCME is one tool used by ModMii in order to facilitate a Wii Region Change. ARCME by itself is not enough to complete the region change procedure. To softmod or region change your Wii use [ModMii](https://modmii.github.io).
 
 ## Compiling
-You need to install [devKitPro](https://devkitpro.org/wiki/Getting_Started) with the `wii-dev` group installed, as well as [RuntimeIOSPatch](https://gbatemp.net/threads/wii-vwii-libruntimeiospatch.339606) ([Source](https://gitlab.com/Nanolx/homebrewfilter/-/tree/master/libruntimeiospatch)) properly setup.  
+You need to install [devKitPro](https://devkitpro.org/wiki/Getting_Started) with the `wii-dev` group installed~~, as well as [RuntimeIOSPatch](https://gbatemp.net/threads/wii-vwii-libruntimeiospatch.339606) ([Source](https://gitlab.com/Nanolx/homebrewfilter/-/tree/master/libruntimeiospatch)) properly setup.~~
 If you are using Windows, it is recommended to use [WSL2](https://docs.microsoft.com/en-us/windows/wsl/about) if avalible.
 Once all required tools are installed, run `make` in the same folder as  `Makefile`.
 
