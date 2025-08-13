@@ -123,6 +123,10 @@ void Console_SetColors(u8 bgColor, u8 bgBold, u8 fgColor, u8 fgBold)
 	Console_SetBgColor(bgColor, bgBold);
 	Console_SetFgColor(fgColor, fgBold);
 }
+void Console_ResetColors(void)
+{
+	printf(CONSOLE_RESET);
+}
 void Console_SetPosition(u8 row, u8 column)
 {
 	// The console understands VT terminal escape codes
@@ -134,11 +138,11 @@ void Console_SetPosition(u8 row, u8 column)
 void PrintBanner()
 {
 	ClearScreen();
-	Console_SetColors(GREEN, 0, WHITE, 2);
+	Console_SetColors(GREEN, 2, WHITE, 1);
 	char text[ConsoleCols];
 	snprintf(text, sizeof(text), "Any Region Changer   ModMii Edition   %.1lf.%i            IOS: %i", ARCME_VERSION, ARCME_REV, IOS_GetVersion());
 	PrintCenter(text, ConsoleCols);
-	Console_SetColors(BLACK, 0, WHITE, 2);
+	Console_ResetColors();
 }
 /*
 void miscInit(void)

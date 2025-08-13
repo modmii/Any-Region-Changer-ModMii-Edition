@@ -43,7 +43,7 @@ distribution.
 
 #define ITEMS 11
 #define SADR_LENGTH 0x1007 + 1
-#define WARNING_SIGN "\x1b[30;1m\x1b[43;1m/!\\\x1b[37;1m\x1b[40m"
+#define WARNING_SIGN CONSOLE_BLACK CONSOLE_BG_YELLOW "/!\\" CONSOLE_RESET
 #define maxdata 256
 
 // Why was this unsigned? Lol
@@ -285,12 +285,10 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	ISFS_Initialize();
 	WPAD_Init();
 	PAD_Init();
-
-	if (InitGecko())
-		USBGeckoOutput();
+	ISFS_Initialize();
+	InitGecko();
 
 	Current_Ios = IOS_GetVersion();
 	gprintf("\n\ncurrent_ios [%i] \n\n", Current_Ios);
@@ -313,28 +311,28 @@ int main(int argc, char **argv)
 	while (1)
 	{
 		PrintBanner();
-		printf("\n------------------------------------------------------------------------");
+		printf("\n-----------------------------------------------------------------------\n");
 		printf("Edit Region Settings");
 		if (sysmenu_region != 0 && sysmenu_region != AREAtoSysMenuRegion(area))
-			printf("    " WARNING_SIGN " \x1b[41;1mWARNING: AREA/SysMenu MISMATCH!\x1b[40m " WARNING_SIGN);
-		printf("\n------------------------------------------------------------------------");
+			printf("    " WARNING_SIGN " " CONSOLE_BG_RED "WARNING: AREA/SysMenu MISMATCH!" CONSOLE_RESET " " WARNING_SIGN);
+		printf("\n-----------------------------------------------------------------------\n");
 
 		for (i = 0; i < 8; i++)
 			printf("%s\n", page_contents[i]);
 
 		printf("\n\t    Country Codes: \t1[JPN] 49[USA] 110[UK] 136[KOR]\n");
 
-		printf("------------------------------------------------------------------------");
+		printf("-----------------------------------------------------------------------\n");
 		printf("Auto Fix - SysMenu Region: %c (v%u)\n", sysmenu_region, sysmenu_version);
-		printf("------------------------------------------------------------------------");
+		printf("-----------------------------------------------------------------------\n");
 		for (i = i; i < 9; i++)
 			printf("%s\n", page_contents[i]);
-		printf("------------------------------------------------------------------------");
+		printf("-----------------------------------------------------------------------\n");
 		printf("Exiting Options\n");
-		printf("------------------------------------------------------------------------");
+		printf("-----------------------------------------------------------------------\n");
 		for (i = i; i < ITEMS; i++)
 			printf("%s\n", page_contents[i]);
-		printf("------------------------------------------------------------------------");
+		printf("-----------------------------------------------------------------------\n");
 		Console_SetPosition(26, 0);
 		printf("Change Selection: [%s%s %s%s]\t\t\t\t\t\tSelect: [A]\tCredits: [1]", LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW);
 		buttons = wait_anyKey();
@@ -441,7 +439,7 @@ int main(int argc, char **argv)
 					lang = 0;
 					area = 0;
 					game = 0;
-					video = 0;
+					// video = 0;
 					country = 1;
 				}
 				else if (sysmenu_region == 'U')
@@ -449,7 +447,7 @@ int main(int argc, char **argv)
 					lang = 1;
 					area = 1;
 					game = 1;
-					video = 0;
+					// video = 0;
 					country = 49;
 				}
 				else if (sysmenu_region == 'E')
@@ -457,7 +455,7 @@ int main(int argc, char **argv)
 					lang = 1;
 					area = 2;
 					game = 2;
-					video = 1;
+					// video = 1;
 					country = 110;
 				}
 				else if (sysmenu_region == 'K')
@@ -465,7 +463,7 @@ int main(int argc, char **argv)
 					lang = 1;
 					area = 7;
 					game = 3;
-					video = 0;
+					// video = 0;
 					country = 136;
 				}
 				else
@@ -476,13 +474,10 @@ int main(int argc, char **argv)
 					exit(0);
 				}
 				selected--;
-				// saveSettings();
+				saveSettings();
 				break;
 			case 9:
 				needbreak = true;
-				break;
-			case 10:
-				STM_RebootSystem();
 				break;
 			}
 		}
