@@ -33,13 +33,54 @@ distribution.
 #include <ogcsys.h>
 #include <gccore.h>
 #include <ogc/system.h>
+#include <ogc/conf.h>
+#include <ogc/machine/processor.h>
 #include <wiiuse/wpad.h>
 
 #include "wiibasics.h"
 #include "libpatcher/libpatcher.h"
-#include "sysconf.h"
 #include "detect_settings.h"
 #include "gecko.h"
+
+// #include "sysconf.h"
+#include "prodinfo.h"
+extern s32 CONF_Set(const char *name, const void *buffer, u32 length);
+
+s32 CONF_SetLanguage(s8 lang) {
+	// hopefully this gets optimized out lmao
+	switch (lang) {
+		case CONF_LANG_JAPANESE:
+		case CONF_LANG_ENGLISH:
+		case CONF_LANG_GERMAN:
+		case CONF_LANG_FRENCH:
+		case CONF_LANG_SPANISH:
+		case CONF_LANG_ITALIAN:
+		case CONF_LANG_DUTCH:
+		case CONF_LANG_SIMP_CHINESE:
+		case CONF_LANG_TRAD_CHINESE:
+		case CONF_LANG_KOREAN:
+			break;
+
+		default:
+			return CONF_EBADVALUE;
+	}
+
+	s32 ret = CONF_Set("IPL.LNG", &lang, sizeof(lang));
+	if (ret == sizeof(lang))
+		ret = 0;
+
+	return ret;
+}
+
+s32 CONF_SetEULA(s8 set) {
+	set = (set == 0) ? 0 : 1;
+
+	s32 ret = CONF_Set("IPL.EULA", &set, sizeof(set));
+	if (ret == sizeof(set))
+		ret = 0;
+
+	return ret;
+}
 
 #define ITEMS 11
 #define SADR_LENGTH 0x1007 + 1
@@ -116,12 +157,12 @@ void handleError(const char *string, int errorval)
 void getSettings(void)
 {
 	int ret;
-	lang = SYSCONF_GetLanguage();
-	area = SYSCONF_GetArea();
-	game = SYSCONF_GetRegion();
-	video = SYSCONF_GetVideo();
-	eula = SYSCONF_GetEULA();
-	if (lang < 0 || area < 0 || game < 0 || video < 0 || (eula != SYSCONF_ENOENT && eula < 0))
+	lang = CONF_GetLanguage();
+	area = ProductInfo_GetArea();
+	game = ProductInfo_GetGameRegion();
+	video = ProductInfo_GetVideoRegion();
+	eula = CONF_GetEULA();
+	if (lang < 0 || area < 0 || game < 0 || video < 0 || (eula != CONF_ENOENT && eula < 0))
 	{
 		printf("Error getting settings!\n"
 			"lang=%d\t"
@@ -133,12 +174,12 @@ void getSettings(void)
 		exit(1);
 	}
 
-	if (SYSCONF_GetLength("IPL.SADR") != SADR_LENGTH)
-		handleError("IPL.SADR Length Incorrect", SYSCONF_GetLength("IPL.SADR"));
+	if (CONF_GetLength("IPL.SADR") != SADR_LENGTH)
+		handleError("IPL.SADR Length Incorrect", CONF_GetLength("IPL.SADR"));
 
-	ret = SYSCONF_Get("IPL.SADR", sadr, SADR_LENGTH);
+	ret = CONF_Get("IPL.SADR", sadr, SADR_LENGTH);
 	if (ret < 0)
-		handleError("SYSCONF_Get IPL.SADR", ret);
+		handleError("CONF_Get IPL.SADR", ret);
 
 	country = sadr[0];
 	gprintf("\n\ncountry[%i] \n\n", country);
@@ -148,28 +189,28 @@ void saveSettings(void)
 {
 	Console_SetPosition(24, 0);
 	int ret = 0;
-	if (lang != SYSCONF_GetLanguage())
-		ret = SYSCONF_SetLanguage(lang);
+	if (lang != CONF_GetLanguage())
+		ret = CONF_SetLanguage(lang);
 	if (ret)
 		handleError("SYSCONF_SetLanguage", ret);
 
-	if (area != SYSCONF_GetArea())
-		ret = SYSCONF_SetArea(area);
+	if (area != ProductInfo_GetArea())
+		ret = ProductInfo_SetArea(area);
 	if (ret)
-		handleError("SYSCONF_SetArea", ret);
+		handleError("ProductInfo_SetArea", ret);
 
-	if (game != SYSCONF_GetRegion())
-		ret = SYSCONF_SetRegion(game);
+	if (game != ProductInfo_GetGameRegion())
+		ret = ProductInfo_SetGameRegion(game);
 	if (ret)
-		handleError("SYSCONF_SetRegion", ret);
+		handleError("ProductInfo_SetGameRegion", ret);
 
-	if (video != SYSCONF_GetVideo())
-		ret = SYSCONF_SetVideo(video);
+	if (video != ProductInfo_GetVideoRegion())
+		ret = ProductInfo_SetVideoRegion(video);
 	if (ret)
-		handleError("SYSCONF_SetVideo", ret);
+		handleError("ProductInfo_SetVideoRegion", ret);
 
-	if (eula != SYSCONF_GetEULA())
-		ret = SYSCONF_SetEULA(eula);
+	if (eula != CONF_GetEULA())
+		ret = CONF_SetEULA(eula);
 	if (ret)
 		handleError("SYSCONF_SetEULA", ret);
 
@@ -177,18 +218,21 @@ void saveSettings(void)
 	{
 		memset(sadr, 0, SADR_LENGTH);
 		sadr[0] = country;
-		ret = SYSCONF_Set("IPL.SADR", sadr, SADR_LENGTH);
-		if (ret)
-			handleError("SYSCONF_Set IPL.SADR", ret);
+		ret = CONF_Set("IPL.SADR", sadr, SADR_LENGTH);
+		if (ret != SADR_LENGTH)
+			handleError("CONF_Set IPL.SADR", ret);
 	}
 	// wait_anyKey();
 	printf("Saving...");
-	ret = SYSCONF_SaveChanges();
+	ret = CONF_SaveChanges();
 	if (ret < 0)
 		handleError("SYSCONF_SaveChanges", ret);
-	else
-		printf("OK!\n");
-	printf("Press any key to continue .....");
+
+	ret = ProductInfo_Save();
+	if (ret < 0)
+		handleError("ProductInfo_Save", ret);
+
+	printf("OK! Press any key to continue .....");
 	wait_anyKey();
 }
 
@@ -214,7 +258,7 @@ void updatePage(void)
 		{ "Game Region setting",		regions[game]	},
 		{ "Console Video Mode",			vmodes[video]	},
 		{ "Shop Country Code",			itos(country)	},
-		{ "End-User License Agreement", (eula == SYSCONF_ENOENT) ? "Disabled" : eulas[eula]},
+		{ "End-User License Agreement", (eula == CONF_ENOENT) ? "Disabled" : eulas[eula]},
 
 		{ "Revert Settings",	"Revert"	},
 		{ "Save Settings",		"Save"		},
@@ -280,7 +324,7 @@ int main(int argc, char **argv)
 
 	// we have AHBPROT starting here
 	if ((read32(0xD8005A0) /* LT_CHIPREVID */ & 0xFFFF0000) == 0xCAFE0000) {
-		printf("\n\n\nThis software cannot be used on a Wii U!!n\");
+		printf("\n\n\nThis software cannot be used on a Wii U!!\n");
 		sleep(5);
 		return -1;
 	}
@@ -297,11 +341,13 @@ int main(int argc, char **argv)
 	sysmenu_region = get_sysmenu_region();
 	gprintf("\n\nsysmenu_version[%u] sysmenu_region[%c] \n\n", sysmenu_version, sysmenu_region);
 	gprintf("Init SYSCONF...");
-	ret = SYSCONF_Init();
+	ret = CONF_Init();
 	if (ret < 0)
-		handleError("SYSCONF_Init", ret);
-	else
-		gprintf("OK!\n");
+		handleError("CONF_Init", ret);
+
+	ret = ProductInfo_Init();
+	if (ret < 0)
+		handleError("ProductInfo_Init", ret);
 
 	getSettings();
 	region = game;

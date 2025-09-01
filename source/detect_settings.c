@@ -24,6 +24,8 @@ must not be misrepresented as being the original software.
 Hi i made some changes
 - thepikachugamer
 
+(Okay let's be serious. I changed get_sysmenu_region. And get_installed_title_version)
+
 3.This notice may not be removed or altered from any source
 distribution.
 
