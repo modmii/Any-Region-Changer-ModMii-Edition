@@ -82,7 +82,7 @@ s32 CONF_SetEULA(s8 set) {
 	return ret;
 }
 
-#define ITEMS 11
+#define ITEMS 10
 #define SADR_LENGTH 0x1007 + 1
 #define WARNING_SIGN CONSOLE_BLACK CONSOLE_BG_YELLOW "/!\\" CONSOLE_RESET
 #define maxdata 256
@@ -232,7 +232,7 @@ void saveSettings(void)
 	if (ret < 0)
 		handleError("ProductInfo_Save", ret);
 
-	printf("OK! Press any key to continue .....");
+	printf("OK! Press any key to continue.....");
 	wait_anyKey();
 }
 
@@ -281,21 +281,21 @@ char AREAtoSysMenuRegion(int area)
 	// Data based on my own tests with AREA/Sysmenu
 	switch (area)
 	{
-	case 0:
-	case 5:
-	case 6:
+	case CONF_AREA_JPN:
+	case CONF_AREA_TWN:
+	case CONF_AREA_ROC:
 		return 'J';
-	case 1:
-	case 4:
-	case 8:
-	case 9:
-	case 10:
-	case 11:
+	case CONF_AREA_USA:
+	case CONF_AREA_BRA:
+	// case CONF_AREA_HKG: // << ?
+	// case CONF_AREA_ASI: // << ?
+	// case CONF_AREA_LTN: // << ?
+	// case CONF_AREA_SAF:
 		return 'U';
-	case 2:
-	case 3:
+	case CONF_AREA_EUR:
+	case CONF_AREA_AUS:
 		return 'E';
-	case 7:
+	case CONF_AREA_KOR:
 		return 'K';
 	default:
 		return 0;
@@ -482,34 +482,34 @@ int main(int argc, char **argv)
 			case 8:
 				if (sysmenu_region == 'J')
 				{ // jpn
-					lang = 0;
-					area = 0;
-					game = 0;
-					// video = 0;
+					lang = CONF_LANG_JAPANESE;
+					area = CONF_AREA_JPN;
+					game = CONF_REGION_JP;
+					// video = CONF_VIDEO_NTSC;
 					country = 1;
 				}
 				else if (sysmenu_region == 'U')
 				{ // usa
-					lang = 1;
-					area = 1;
-					game = 1;
-					// video = 0;
+					lang = CONF_LANG_ENGLISH;
+					area = CONF_AREA_USA;
+					game = CONF_REGION_US;
+					// video = CONF_VIDEO_NTSC;
 					country = 49;
 				}
 				else if (sysmenu_region == 'E')
 				{ // EUR/PAL
-					lang = 1;
-					area = 2;
-					game = 2;
-					// video = 1;
+					lang = CONF_LANG_ENGLISH;
+					area = CONF_AREA_EUR;
+					game = CONF_REGION_EU;
+					// video = CONF_VIDEO_PAL;
 					country = 110;
 				}
 				else if (sysmenu_region == 'K')
 				{ // KOR
-					lang = 1;
-					area = 7;
-					game = 3;
-					// video = 0;
+					lang = CONF_LANG_KOREAN; // ? previously 1
+					area = CONF_AREA_KOR;
+					game = CONF_REGION_KR;
+					// video = CONF_VIDEO_NTSC;
 					country = 136;
 				}
 				else
