@@ -142,13 +142,10 @@ int ProductInfo_Save(void) {
 	if (!BufferDirty)
 		return 0;
 
-	printf("%s", SettingBuffer);
-
 	char encrypted[SETTING_TXT_SIZE] [[gnu::aligned(0x20)]];
 	ProductInfo_DecryptBuffer(SettingBuffer, encrypted);
 
 	// Get ready!
-	printf("Change count=%i\n", BufferDirty);
 	ret = fd = ISFS_Open(SETTING_TXT_PATH, ISFS_OPEN_WRITE);
 	if (ret < 0) {
 		return ret;
